@@ -63,4 +63,4 @@ class RusTbotStore(models.Model):
         return [{"title": item.title,
                  "link": item.link,
                  "author": item.author,
-                 } for item in RusTbotStore.objects.order_by("-up_time")[:count]]
+                 } for item in RusTbotStore.objects.order_by("up_time")[:count]]
