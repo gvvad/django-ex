@@ -1,3 +1,7 @@
+# Editors
+.idea/
+.vscode/
+
 # Django
 db.sqlite3
 staticfiles/
