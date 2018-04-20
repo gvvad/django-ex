@@ -69,7 +69,7 @@ class TBot():
         try:
             RusTbotChat.store_chat_id(chat_id)
             self._dispatch_cmd_help(chat_id)
-            self.dispatch_rustorka_data(self.storage.get_data(), [chat_id], "Here is last update:")
+            self.dispatch_rustorka_data(RustorkaHotStorage.get_data(), [chat_id], "Here is last update:")
         except Exception:
             logging.exception("Error cmd start")
 
