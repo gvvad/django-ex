@@ -5,7 +5,7 @@ import telegram
 from .tbstorage import RustorkaHotStorage
 from ..models import RusTbotChat
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 class TBot():
     updater_thread = None
@@ -17,13 +17,14 @@ class TBot():
         self.token = token
         self.bot = telegram.Bot(token=token)
 
-        self.scheduler_thread = threading.Thread(target=self._scheduler)
+        self.scheduler_thread = threading.Thread(target=self._scheduler, daemon=True)
         self.scheduler_thread.start()
 
     def _scheduler(self):
         logging.info("Start scheduler")
         while True:
             try:
+                logging.debug("Sheduler call update")
                 delta = RustorkaHotStorage.update()
                 if delta:
                     self.dispatch_rustorka_data(delta, RusTbotChat.chat_list())

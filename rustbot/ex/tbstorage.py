@@ -16,9 +16,11 @@ class RustorkaHotStorage():
 
     @staticmethod
     def update():
+        logging.debug("Start Update")
         try:
             r = Request(RustorkaHotStorage.PREURL + "/viewforum.php?f=1840", headers=RustorkaHotStorage.HEADERS)
             content = urlopen(r).read()
+            logging.debug("Requested success")
 
             new_data = []
             tree = html.fromstring(content).xpath("//*[@id='forum-table']//tr[@id]")
@@ -38,6 +40,7 @@ class RustorkaHotStorage():
                     logging.exception("TBStorage udpate")
                     return []
 
+            logging.debug("Return frome Update")
             return RusTbotStore.store_entries(new_data)
         except Exception:
             return []
