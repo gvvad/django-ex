@@ -36,9 +36,10 @@ def index(request):
         return HttpResponse("rustbot OK")
     elif request.method == "POST":
         try:
+            logging.debug(request.body)
             tbot.put_update(json.loads(request.body))
         except Exception:
-            pass
+            logging.exception("POST response")
         return HttpResponse("")
 
 add_path = [path(secret_path, index), path("debug", debug)]
