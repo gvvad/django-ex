@@ -1,18 +1,22 @@
 from django.conf import settings
 from django.conf.urls import include, url
+from django.urls import path
 from django.contrib import admin
+from django.http import HttpResponse
 
-from welcome.views import index, health
+from rustbot.urls import add_path
+
+def index(val):
+    return HttpResponse("Index page for app!")
 
 urlpatterns = [
     # Examples:
     # url(r'^$', 'project.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
-    url(r'^$', index),
-    url(r'^health$', health),
-    url(r'^admin/', include(admin.site.urls)),
-]
+    path("", index),
+    url(r'^admin/', admin.site.urls),
+] + add_path
 
 if settings.DEBUG:
     import debug_toolbar
