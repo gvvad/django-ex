@@ -3,3 +3,5 @@ django-debug-toolbar
 gunicorn
 psycopg2
 whitenoise
+python-telegram-bot
+lxml

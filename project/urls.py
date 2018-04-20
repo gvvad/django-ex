@@ -4,7 +4,7 @@ from django.urls import path
 from django.contrib import admin
 from django.http import HttpResponse
 
-from rustbot.urls import add_path
+from rustbot.views import add_path
 
 def index(val):
     return HttpResponse("Index page for app!")

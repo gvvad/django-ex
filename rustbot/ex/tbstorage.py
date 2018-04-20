@@ -1,6 +1,8 @@
-import json, logging, urllib2
+import json, logging
+from urllib.request import Request, urlopen
 from lxml import html
 
+from ..models import RusTbotStore
 
 class RustorkaHotStorage():
     HEADERS = {
@@ -8,32 +10,24 @@ class RustorkaHotStorage():
     }
     PREURL = "http://rustorka.com/forum"
 
-    storage = []
+    @staticmethod
+    def get_data():
+        return RusTbotStore.get_last(20)
 
-    def __init__(self, fname="rustor.json"):
-        self.FILE_NAME = fname
-
+    @staticmethod
+    def update():
         try:
-            with open(self.FILE_NAME, "r") as file:
-                self.storage = json.load(file)
-        except Exception:
-            pass
-
-    def get_data(self):
-        return self.storage
-
-    def update(self):
-        try:
-            text = urllib2.Request(self.PREURL + "/viewforum.php?f=1840", headers=self.HEADERS).read()
+            r = Request(RustorkaHotStorage.PREURL + "/viewforum.php?f=1840", headers=RustorkaHotStorage.HEADERS)
+            content = urlopen(r).read()
 
             new_data = []
-            tree = html.fromstring(text).xpath("//*[@id='forum-table']//tr[@id]")
+            tree = html.fromstring(content).xpath("//*[@id='forum-table']//tr[@id]")
             for tr in tree:
                 try:
                     #_id = tr.attrib["id"]
                     #_icon = self.PREURL + tr.xpath(".//img[@class='topic_icon']")[0].attrib["src"][1:]
                     _title = tr.xpath(".//a[@class='topictitle']")[0].text
-                    _link = self.PREURL + tr.xpath(".//a[@class='topictitle']")[0].attrib["href"][1:]
+                    _link = RustorkaHotStorage.PREURL + tr.xpath(".//a[@class='topictitle']")[0].attrib["href"][1:]
                     _author = tr.xpath("./td/p/a")[0].text
 
                     new_data.append({"title": _title,
@@ -42,19 +36,9 @@ class RustorkaHotStorage():
                                      })
                 except Exception:
                     logging.exception("TBStorage udpate")
-                    pass
+                    return []
 
-            delta = list(filter(lambda x: x not in self.storage, new_data))
-            self.storage = new_data
-
-            try:
-                with open(self.FILE_NAME, "w") as file:
-                    file.write(json.dumps(self.storage))
-            except Exception:
-                logging.exception("TBStorage update write file")
-                pass
-
-            return delta
+            return RusTbotStore.store_entries(new_data)
         except Exception:
             return []
             pass
