@@ -2,8 +2,8 @@ import json, threading, time
 import logging
 import telegram
 
-from .tbstorage import RustorkaHotStorage
 from ..models import RusTbotChat
+from ..models import RusTbotStore
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -25,13 +25,13 @@ class TBot():
         while True:
             try:
                 logging.debug("Sheduler call update")
-                delta = RustorkaHotStorage.update()
+                delta = RusTbotStore.update()
                 if delta:
                     self.dispatch_rustorka_data(delta, RusTbotChat.chat_list())
             except Exception:
                 logging.exception("Scheduler error:")
 
-            time.sleep(60 * 30)
+            time.sleep(60 * 30) #30 minutes interval
 
     #
     #   Webhook update data handler
@@ -50,8 +50,13 @@ class TBot():
 
     #
     #   Dispatch webhook url to telegram server
-    def set_webhook_url(self, url):
-        self.bot.setWebhook(url)
+    def set_webhook_url(self, url, cert_file_path=""):
+        try:
+            with open(cert_file_path, "rb") as cert_file:
+                self.bot.setWebhook(url, cert_file)
+                logging.debug("Cert is send")
+        except FileNotFoundError:
+            self.bot.setWebhook(url)
 
     #
     #   Remove binded webhook
@@ -69,7 +74,7 @@ class TBot():
         try:
             RusTbotChat.store_chat_id(chat_id)
             self._dispatch_cmd_help(chat_id)
-            self.dispatch_rustorka_data(RustorkaHotStorage.get_data(), [chat_id], "Here is last update:")
+            self.dispatch_rustorka_data(RusTbotStore.get_last(), [chat_id], "Here is last update:")
         except Exception:
             logging.exception("Error cmd start")
 

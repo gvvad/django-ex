@@ -2,6 +2,9 @@
 .idea/
 .vscode/
 
+# SSL keys and certificates
+*.pem
+
 # Django
 db.sqlite3
 staticfiles/

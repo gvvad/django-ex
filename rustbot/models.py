@@ -1,24 +1,23 @@
 from django.db import models
+from .ex.tbparser import RustorkaWebParser
 
-# Create your models here.
+
 class RusTbotChat(models.Model):
-    chat_id = models.CharField(max_length=32)
+    chat_id = models.CharField(max_length=32, unique=True)
+
+
+    @staticmethod
+    def is_chat_id(_id):
+        return bool(RusTbotChat.objects.filter(chat_id=_id))
 
     @staticmethod
     def store_chat_id(_id):
-        RusTbotChat(chat_id=_id).save()
+        if not RusTbotChat.is_chat_id(_id):
+            RusTbotChat(chat_id=_id).save()
 
     @staticmethod
     def remove_chat_id(_id):
         RusTbotChat.objects.filter(chat_id=_id).delete()
-
-    @staticmethod
-    def is_chat_id(_id):
-        try:
-            RusTbotChat.objects.get(chat_id=_id)
-            return True
-        except models.ObjectDoesNotExist:
-            return False
 
     @staticmethod
     def chat_list():
@@ -51,7 +50,7 @@ class RusTbotStore(models.Model):
             return True
 
     @staticmethod
-    def store_entries(items):
+    def _store_entries(items):
         delta = []
         for item in items:
             if RusTbotStore.store_entry(item["title"], item["link"], item["author"]):
@@ -60,7 +59,12 @@ class RusTbotStore(models.Model):
 
     @staticmethod
     def get_last(count=20):
-        return [{"title": item.title,
-                 "link": item.link,
-                 "author": item.author,
-                 } for item in RusTbotStore.objects.order_by("up_time")[:count]]
+        for item in RusTbotStore.objects.order_by("up_time")[:count]:
+            yield {"title": item.title,
+                   "link": item.link,
+                   "author": item.author,
+                   }
+
+    @staticmethod
+    def update():
+        return RusTbotStore._store_entries(RustorkaWebParser.get_hot())

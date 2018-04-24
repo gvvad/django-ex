@@ -1,24 +1,17 @@
-import json, logging
+import logging
 from urllib.request import Request, urlopen
 from lxml import html
 
-from ..models import RusTbotStore
-
-class RustorkaHotStorage():
+class RustorkaWebParser():
     HEADERS = {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"
     }
     PREURL = "http://rustorka.com/forum"
 
     @staticmethod
-    def get_data():
-        return RusTbotStore.get_last(20)
-
-    @staticmethod
-    def update():
-        logging.debug("Start Update")
+    def get_hot():
         try:
-            r = Request(RustorkaHotStorage.PREURL + "/viewforum.php?f=1840", headers=RustorkaHotStorage.HEADERS)
+            r = Request(RustorkaWebParser.PREURL + "/viewforum.php?f=1840", headers=RustorkaWebParser.HEADERS)
             content = urlopen(r).read()
             logging.debug("Requested success")
 
@@ -29,7 +22,7 @@ class RustorkaHotStorage():
                     #_id = tr.attrib["id"]
                     #_icon = self.PREURL + tr.xpath(".//img[@class='topic_icon']")[0].attrib["src"][1:]
                     _title = tr.xpath(".//a[@class='topictitle']")[0].text
-                    _link = RustorkaHotStorage.PREURL + tr.xpath(".//a[@class='topictitle']")[0].attrib["href"][1:]
+                    _link = RustorkaWebParser.PREURL + tr.xpath(".//a[@class='topictitle']")[0].attrib["href"][1:]
                     _author = tr.xpath("./td/p/a")[0].text
 
                     new_data.append({"title": _title,
@@ -40,8 +33,6 @@ class RustorkaHotStorage():
                     logging.exception("TBStorage udpate")
                     return []
 
-            logging.debug("Return frome Update")
-            return RusTbotStore.store_entries(new_data)
+            return new_data
         except Exception:
             return []
-            pass
