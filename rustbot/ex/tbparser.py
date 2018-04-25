@@ -11,6 +11,7 @@ class RustorkaWebParser():
     @staticmethod
     def get_hot():
         try:
+            logging.debug("get_hot requested")
             r = Request(RustorkaWebParser.PREURL + "/viewforum.php?f=1840", headers=RustorkaWebParser.HEADERS)
             content = urlopen(r).read()
             logging.debug("Requested success")
@@ -34,11 +35,13 @@ class RustorkaWebParser():
 
             return new_data
         except Exception:
+            logging.exception("get_hot")
             return []
 
     @staticmethod
     def get_hot_news():
         try:
+            logging.debug("get_hot_news requested")
             r = Request(RustorkaWebParser.PREURL + "/viewforum.php?f=1398", headers=RustorkaWebParser.HEADERS)
             content = urlopen(r).read()
             logging.debug("Requested success")
@@ -61,5 +64,6 @@ class RustorkaWebParser():
                 except Exception:
                     logging.exception("TBStorage udpate")
             return new_data
-        except:
+        except Exception:
+            logging.exception("get_hot_news")
             return []
