@@ -38,7 +38,7 @@ class TBot():
     def put_update(self, update):
         if "message" in update:
             text = update["message"]["text"]
-            chat_id = update["message"]["chat"]["id"]
+            chat_id = update["message"]["from"]["id"]
             if text == "/help":
                 self._dispatch_cmd_help(chat_id)
             elif text == "/start":

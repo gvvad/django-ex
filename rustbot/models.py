@@ -59,7 +59,7 @@ class RusTbotStore(models.Model):
 
     @staticmethod
     def get_last(count=20):
-        for item in RusTbotStore.objects.order_by("up_time")[:count]:
+        for item in RusTbotStore.objects.order_by("-up_time")[:count]:
             yield {"title": item.title,
                    "link": item.link,
                    "author": item.author,
@@ -67,4 +67,6 @@ class RusTbotStore(models.Model):
 
     @staticmethod
     def update():
-        return RusTbotStore._store_entries(RustorkaWebParser.get_hot())
+        a = RusTbotStore._store_entries(RustorkaWebParser.get_hot_news())
+        b = RusTbotStore._store_entries(RustorkaWebParser.get_hot())
+        return a + b

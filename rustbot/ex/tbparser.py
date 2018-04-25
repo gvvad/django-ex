@@ -31,8 +31,35 @@ class RustorkaWebParser():
                                      })
                 except Exception:
                     logging.exception("TBStorage udpate")
-                    return []
 
             return new_data
         except Exception:
+            return []
+
+    @staticmethod
+    def get_hot_news():
+        try:
+            r = Request(RustorkaWebParser.PREURL + "/viewforum.php?f=1398", headers=RustorkaWebParser.HEADERS)
+            content = urlopen(r).read()
+            logging.debug("Requested success")
+
+            new_data = []
+            tree = html.fromstring(content).xpath("//*[@id='forum-table']//tr[@id]")
+            for tr in tree:
+                try:
+                    # _id = tr.attrib["id"]
+                    # _icon = self.PREURL + tr.xpath(".//img[@class='topic_icon']")[0].attrib["src"][1:]
+                    a = tr.xpath(".//a[contains(@class,'torTopic')]")[0]
+                    _title = a.xpath(".//*")[0].text
+                    _link = RustorkaWebParser.PREURL + a.attrib["href"][1:]
+                    _author = tr.xpath(".//a[contains(@class, 'topicAuthor')]")[0].text
+
+                    new_data.append({"title": _title,
+                                     "link": _link,
+                                     "author": _author
+                                     })
+                except Exception:
+                    logging.exception("TBStorage udpate")
+            return new_data
+        except:
             return []
