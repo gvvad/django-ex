@@ -1,5 +1,4 @@
 import os
-
 from django.conf import settings
 
 
@@ -8,7 +7,6 @@ engines = {
     'postgresql': 'django.db.backends.postgresql_psycopg2',
     'mysql': 'django.db.backends.mysql',
 }
-
 
 def config():
     service_name = os.getenv('DATABASE_SERVICE_NAME', '').upper().replace('-', '_')
@@ -26,7 +24,4 @@ def config():
         'PASSWORD': os.getenv('DATABASE_PASSWORD'),
         'HOST': os.getenv('{}_SERVICE_HOST'.format(service_name)),
         'PORT': os.getenv('{}_SERVICE_PORT'.format(service_name)),
-        'OPTIONS': {
-            'charset': 'utf8'
-        }
     }

@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True if os.getenv("DJANGO_DEBUG") else False
 
 ALLOWED_HOSTS = ['*']
 
@@ -77,7 +77,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'wsgi.application'
-#CSRF_COOKIE_SECURE = True
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases

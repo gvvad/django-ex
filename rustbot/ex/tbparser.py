@@ -2,6 +2,7 @@ import logging
 from urllib.request import Request, urlopen
 from lxml import html
 
+
 class RustorkaWebParser():
     HEADERS = {
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"
@@ -63,6 +64,7 @@ class RustorkaWebParser():
                                      })
                 except Exception:
                     logging.exception("TBStorage udpate")
+
             return new_data
         except Exception:
             logging.exception("get_hot_news")

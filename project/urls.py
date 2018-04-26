@@ -5,18 +5,19 @@ from django.contrib import admin
 from django.http import HttpResponse
 import logging
 
-from rustbot.views import add_path
+from rustbot.views import add_path as rustbot_add_path
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO)
 logging.info("urls.py START")
 
+#   index app page
 def index(val):
     return HttpResponse("Index page for app!")
 
 urlpatterns = [
     path("", index),
     url(r'^admin/', admin.site.urls),
-] + add_path
+] + rustbot_add_path
 
 if settings.DEBUG:
     import debug_toolbar

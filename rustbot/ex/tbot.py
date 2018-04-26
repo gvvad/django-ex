@@ -1,25 +1,32 @@
-import json, threading, time
+from django.conf import settings
+import json, threading, time, os
 import logging
 import telegram
 
 from ..models import RusTbotChat
 from ..models import RusTbotStore
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO)
 
 class TBot():
-    updater_thread = None
     scheduler_thread = None
     storage = None
     token = ""
+    interval = 30
 
     def __init__(self, token):
         self.token = token
         self.bot = telegram.Bot(token=token)
 
+        try:
+            self.interval = int(os.getenv("RUS_TBOT_INTERVAL"))
+        except Exception:
+            self.interval = 30
+
         self.scheduler_thread = threading.Thread(target=self._scheduler, daemon=True)
         self.scheduler_thread.start()
 
+    #   background daemon worker
     def _scheduler(self):
         logging.info("Start scheduler")
         while True:
@@ -31,9 +38,8 @@ class TBot():
             except Exception:
                 logging.exception("Scheduler error:")
 
-            time.sleep(60 * 30) #30 minutes interval
+            time.sleep(60 * self.interval)
 
-    #
     #   Webhook update data handler
     def put_update(self, update):
         if "message" in update:
@@ -48,7 +54,6 @@ class TBot():
             else:
                 self._dispatch_cmd_unknown(chat_id)
 
-    #
     #   Dispatch webhook url to telegram server
     def set_webhook_url(self, url, cert_file_path=""):
         try:
@@ -58,12 +63,10 @@ class TBot():
         except FileNotFoundError:
             self.bot.setWebhook(url)
 
-    #
     #   Remove binded webhook
     def delete_webhook_url(self):
         self.bot.deleteWebhook()
 
-    #
     #   Dispatch bot commands
     def _dispatch_cmd_help(self, chat_id):
         text = "You is subscribed!\n" if RusTbotChat.is_chat_id(chat_id) else "You is not subscribed!\n"
@@ -88,8 +91,7 @@ class TBot():
     def _dispatch_cmd_unknown(self, chat_id):
         self.bot.send_message(chat_id=chat_id, text="I dont understand you.")
 
-    ###
-
+    #   send data to users
     def dispatch_rustorka_data(self, datas, chats, prefix=""):
         text = prefix + "\n" if prefix else ""
         text += "\n".join(
