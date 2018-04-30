@@ -44,12 +44,11 @@ class TBot():
                 if delta:
                     delta_tag = 0
                     for item in delta:
-                        delta_tag |= item["tag"]
+                        delta_tag |= item.tag
 
                     text = TBot.render_data(delta)
 
                     for item in RusTbotChat.chat_list():
-                        b = not bool(delta_tag & item.tag_mask)
                         self.bot.send_message(item.chat_id,
                                               text=text,
                                               disable_notification=not bool(delta_tag & item.tag_mask),
@@ -104,7 +103,7 @@ class TBot():
 
     #   Dispatch bot commands
     def _dispatch_cmd_help(self, chat_id):
-        res = TBot.CmdResponse(text="You is subscribed!\n" if RusTbotChat.is_chat_id(chat_id) else "You is not subscribed!\n")
+        res = TBot.CmdResponse(text="Вы подписаны!\n" if RusTbotChat.is_chat_id(chat_id) else "Вы не подписаны.\n")
         res.no_notif = True
         res.text += "/start - Подписаться на рассылку\n" \
                     "/stop - Отписаться\n" \

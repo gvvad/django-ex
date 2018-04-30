@@ -6,6 +6,7 @@ from django.http import HttpResponse
 import logging
 
 from rustbot.views import add_path as rustbot_add_path
+from kinotbot.views import add_path as kinotbot_add_path
 
 logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO)
 logging.info("urls.py START")
@@ -17,7 +18,7 @@ def index(val):
 urlpatterns = [
     path("", index),
     url(r'^admin/', admin.site.urls),
-] + rustbot_add_path
+] + rustbot_add_path + kinotbot_add_path
 
 if settings.DEBUG:
     import debug_toolbar
