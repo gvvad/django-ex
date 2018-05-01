@@ -28,7 +28,7 @@ class KinoWebParser():
     def parse_top():
         try:
             logging.debug("parse_top_hd requested")
-            r = Request(KinoWebParser.PREURL + "/top.php?t=0&d=0&k=0&f=2&w=1&s=0", headers=KinoWebParser.HEADERS)
+            r = Request(KinoWebParser.PREURL + "/top.php?t=0&d=11&k=0&f=2&w=1&s=0", headers=KinoWebParser.HEADERS)
             content = urlopen(r).read()
             logging.debug("Requested success")
 
