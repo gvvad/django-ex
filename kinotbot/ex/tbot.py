@@ -48,37 +48,26 @@ class TBot():
                 delta = TbotStoreModel.update()
 
                 if delta:
-                    delta_tag = 0
-                    for d in delta:
-                        delta_tag |= d.tag
-
                     for chat in TbotChatModel.chat_list():
-                        for post in TbotStoreModel.get_last(not_earlier=chat.notif_date):
-                            text = "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>". \
-                                format(post.link,
-                                       post.title_ru,
-                                       post.title_en,
-                                       post.year,
-                                       "HD" if bool(post.tag & 1) else "SD")
-                            self._send_photo(chat.chat_id,
-                                             url=post.poster,
-                                             text=text,
-                                             no_notif=not bool(delta_tag & chat.tag_mask))
-                    '''
-                    for post in delta:
-                        text = "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>". \
-                            format(post.link,
-                                   post.title_ru,
-                                   post.title_en,
-                                   post.year,
-                                   "HD" if bool(post.tag & 1) else "SD")
-                        for item in TbotChatModel.chat_list():
-                            self._send_photo(item.chat_id,
-                                             url=post.poster,
-                                             text=text,
-                                             no_notif=not bool(delta_tag & item.tag_mask))
-                    '''
-                    TbotStoreModel.remove_last(200)
+                        try:
+                            for post in TbotStoreModel.get_not_earlier(chat.notif_date):
+                                text = "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>". \
+                                    format(post.link,
+                                           post.title_ru,
+                                           post.title_en,
+                                           post.year,
+                                           "HD" if bool(post.tag & 1) else "SD")
+                                self._send_photo(chat.chat_id,
+                                                 url=post.poster,
+                                                 text=text
+                                                 )
+
+                            TbotChatModel.notif_user(chat.chat_id)
+                        except Exception:
+                            logging.exception("schedule notif")
+                            pass
+
+                    TbotStoreModel.remove_last()
             except Exception:
                 logging.exception("Scheduler error:")
 
@@ -99,7 +88,7 @@ class TBot():
             elif cmd == "/stop":
                 res = self._dispatch_cmd_stop(user_id)
             elif cmd == "/re":
-                res = self._dispatch_cmd_re(user_id, text, username=username)
+                res = self._dispatch_cmd_re(user_id, text[4:], username=username)
             else:
                 pass
                 #res = self._dispatch_cmd_unknown(user_id)
@@ -134,9 +123,11 @@ class TBot():
         return res
 
     def _dispatch_cmd_re(self, user_id, text, username=""):
-        self.bot.send_message(chat_id=self.master_user, text="From: {}\n{}".format(username, text))
-        res = TBot.CmdResponse(text="Спасибо за Ваш отзыв.")
-        return res
+        if text:
+            self.bot.send_message(chat_id=self.master_user, text="From: {}\n{}".format(username, text))
+            return TBot.CmdResponse(text="Спасибо за Ваш отзыв.")
+        else:
+            return None
 
     def _dispatch_cmd_start(self, chat_id):
         try:

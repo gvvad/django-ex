@@ -30,7 +30,7 @@ class TbotChatModel(models.Model):
     def notif_user(user_id):
         r = TbotChatModel.objects.filter(chat_id=user_id)
         if r:
-            r[0].chat_id = timezone.now()
+            r[0].notif_date = timezone.now()
             r[0].save()
 
     @staticmethod
@@ -122,17 +122,19 @@ class TbotStoreModel(models.Model):
         return delta
 
     @staticmethod
-    def get_last(count=20, not_earlier=None):
-        if not_earlier:
-            for item in TbotStoreModel.objects.filter(up_time__gt=not_earlier).order_by("-up_time"):
-                yield item
-        else:
-            for item in TbotStoreModel.objects.order_by("-up_time")[:count]:
-                yield item
+    def get_not_earlier(date):
+        for item in TbotStoreModel.objects.filter(up_time__gt=date).order_by("-up_time"):
+            yield item
 
     @staticmethod
-    def remove_last(count=200):
-        tmp = TbotStoreModel.objects.order_by("-up_time")[count:].values_list("id", flat=True)
+    def get_last(count=20):
+        for item in TbotStoreModel.objects.order_by("-up_time")[:count]:
+            yield item
+
+
+    @staticmethod
+    def remove_last(count=500):
+        tmp = TbotStoreModel.objects.order_by("-up_time")[:count].values_list("id", flat=True)
         TbotStoreModel.objects.exclude(pk__in=list(tmp)).delete()
 
     @staticmethod
