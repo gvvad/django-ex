@@ -134,7 +134,7 @@ class TbotStoreModel(models.Model):
 
     @staticmethod
     def remove_last(count=500):
-        tmp = TbotStoreModel.objects.order_by("-up_time")[:count].values_list("id", flat=True)
+        tmp = TbotStoreModel.objects.order_by("-up_time").values_list("id", flat=True)[:count]
         TbotStoreModel.objects.exclude(pk__in=list(tmp)).delete()
 
     @staticmethod
