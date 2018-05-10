@@ -3,7 +3,7 @@ import logging
 
 from ..models import TbotChatModel
 from ..models import TbotStoreModel
-from project.lib.tbot import TBot
+from project.modules.tbot import TBot
 
 
 class KinoTBot(TBot):
