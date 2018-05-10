@@ -6,21 +6,21 @@ from ..models import TbotStoreModel
 from project.lib.tbot import TBot
 
 
-class KinoTBot(TBot):
+class TolokaTBot(TBot):
     scheduler_thread = None
     interval = 30
     master_user = None
 
     def __init__(self, token):
-        super(KinoTBot, self).__init__(token)
+        super(TolokaTBot, self).__init__(token)
 
         try:
-            self.interval = int(os.getenv("KINO_TBOT_INTERVAL"))
+            self.interval = int(os.getenv("TOLOKA_TBOT_INTERVAL"))
         except Exception:
             self.interval = 30
 
         try:
-            self.master_user = os.getenv("KINO_TBOT_MASTER")
+            self.master_user = os.getenv("TOLOKA_TBOT_MASTER")
         except Exception:
             pass
 
@@ -65,25 +65,31 @@ class KinoTBot(TBot):
         while True:
             try:
                 logging.debug("Sheduler call update")
-                delta = TbotStoreModel.update()
+                delta = TbotStoreModel.update_posts()
 
                 if delta:
-                    for chat in TbotChatModel.chat_list():
+                    for key, value in TbotChatModel.get_notification_list().items():
                         try:
-                            for post in TbotStoreModel.get_not_earlier(chat.notif_date):
-                                text = "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>". \
-                                    format(post.link,
-                                           post.title_ru,
-                                           post.title_en,
-                                           post.year,
-                                           "HD" if bool(post.tag & 1) else "SD")
-                                self.send_photo(self.PhotoResponse(caption=text,
-                                                                   photo=post.poster,
-                                                                   uid=chat.chat_id))
+                            for post in value:
+                                try:
+                                    text = "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>". \
+                                        format(post.link,
+                                               post.title_a,
+                                               post.title_b,
+                                               post.year,
+                                               "HD" if bool(post.tag & 1) else "SD")
+                                    if post.poster:
+                                        self.send_photo(self.PhotoResponse(caption=text,
+                                                                           photo=post.poster,
+                                                                           uid=key))
+                                    else:
+                                        self.send_message(self.MessageResponse(text=text,
+                                                                               uid=key))
+                                except Exception:
+                                    pass
 
-                            TbotChatModel.notif_user(chat.chat_id)
+                            TbotChatModel.notif_user(key)
                         except Exception:
-                            logging.exception("schedule notif")
                             pass
 
                     TbotStoreModel.remove_last()
@@ -139,8 +145,8 @@ class KinoTBot(TBot):
         return "\n".join(
             ["<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>".format(
                 item.link,
-                item.title_ru,
-                item.title_en,
+                item.title_a,
+                item.title_b,
                 item.year,
                 "HD" if bool(item.tag & 1) else "SD"
             ) for item in data])

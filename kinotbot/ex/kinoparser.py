@@ -9,6 +9,8 @@ class KinoWebParser():
     }
     PREURL = "http://kinozal.tv"
 
+    TAG_HD = 0x1
+
     class Container:
         def __init__(self,
                      title_ru="",
@@ -16,13 +18,13 @@ class KinoWebParser():
                      year=0,
                      poster="",
                      link="",
-                     is_hd=False):
+                     tag=0x0):
             self.title_en=title_en
             self.title_ru=title_ru
             self.link=link
             self.year=year
             self.poster=poster
-            self.is_hd=is_hd
+            self.tag=tag
 
     @staticmethod
     def parse_top():
@@ -58,7 +60,7 @@ class KinoWebParser():
                                                             year=year,
                                                             poster=poster,
                                                             link=link,
-                                                            is_hd=True))
+                                                            tag=KinoWebParser.TAG_HD))
                 except Exception:
                     logging.exception("TBStorage udpate")
 
