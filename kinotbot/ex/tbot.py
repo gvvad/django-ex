@@ -81,10 +81,10 @@ class KinoTBot(TBot):
                                                                    photo=post.poster,
                                                                    uid=chat.chat_id))
 
-                            TbotChatModel.notif_user(chat.chat_id)
                         except Exception:
                             logging.exception("schedule notif")
                             pass
+                        TbotChatModel.notif_user(chat.chat_id)
 
                     TbotStoreModel.remove_last()
             except Exception:

@@ -1,4 +1,5 @@
 import logging
+import re
 from urllib.request import Request, urlopen
 from lxml import html
 
@@ -39,6 +40,10 @@ class KinoWebParser():
             for a in tree:
                 try:
                     poster = a.xpath(".//img")[0].attrib["src"]
+                    if re.search("^//", poster):
+                        poster = "http:" + poster
+                    elif re.search("^/", poster):
+                        poster = KinoWebParser.PREURL + poster
                     title_ru, title_en = "", ""
                     year = 0
                     link = KinoWebParser.PREURL + a.attrib["href"]

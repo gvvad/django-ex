@@ -33,8 +33,10 @@ class TolokaWebParser():
             content = urlopen(r).read()
             res = html.fromstring(content).xpath("//table[@class='forumline']//*[@class='postbody']//img")[0].attrib["src"]
             if res:
-                if not re.search("^http", res):
+                if re.search("^//", res):
                     res = "http:" + res
+                elif re.search("^/", res):
+                    res = TolokaWebParser.PREURL + res
                 return res
 
         except Exception:
