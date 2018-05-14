@@ -131,7 +131,6 @@ class TbotStoreModel(models.Model):
         for item in TbotStoreModel.objects.order_by("-up_time")[:count]:
             yield item
 
-
     @staticmethod
     def remove_last(count=500):
         tmp = TbotStoreModel.objects.order_by("-up_time").values_list("id", flat=True)[:count]

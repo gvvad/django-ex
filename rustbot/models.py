@@ -94,6 +94,11 @@ class RusTbotStore(models.Model):
             yield item
 
     @staticmethod
+    def remove_last(count=200):
+        tmp = RusTbotStore.objects.order_by("-up_time").values_list("id", flat=True)[:count]
+        RusTbotStore.objects.exclude(pk__in=list(tmp)).delete()
+
+    @staticmethod
     def update():
         b = RusTbotStore._store_entries(RustorkaWebParser.get_hot_news()[::-1], 2)
         a = RusTbotStore._store_entries(RustorkaWebParser.get_hot()[::-1], 1)

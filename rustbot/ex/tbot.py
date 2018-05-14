@@ -1,22 +1,17 @@
-from django.conf import settings
-import json, threading, time, os
+import threading, time, os
 import logging
-import telegram
 
 from ..models import RusTbotChat
 from ..models import RusTbotStore
+from project.modules.tbot import TBot
 
-logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO)
 
-class TBot():
+class RusTBot(TBot):
     scheduler_thread = None
-    storage = None
-    token = ""
     interval = 30
 
     def __init__(self, token):
-        self.token = token
-        self.bot = telegram.Bot(token=token)
+        super(RusTBot, self).__init__(token)
 
         try:
             self.interval = int(os.getenv("RUS_TBOT_INTERVAL"))
@@ -26,12 +21,34 @@ class TBot():
         self.scheduler_thread = threading.Thread(target=self._scheduler, daemon=True)
         self.scheduler_thread.start()
 
-    # Class for return result from cmd dispatcher
-    class CmdResponse:
-        def __init__(self, text="", buttons=None, no_notif=False):
-            self.text = text
-            self.buttons = buttons
-            self.no_notif = no_notif
+    #   Virtual method replace
+    def _handle_message(self, message):
+        text = message["text"]
+        username = message["from"]["username"]
+        user_id = message["from"]["id"]
+        cmd, *arg = text.split(" ", maxsplit=3)
+
+        if cmd == "/help":
+            return self._dispatch_cmd_help(user_id)
+        elif cmd == "/start":
+            return self._dispatch_cmd_start(user_id)
+        elif cmd == "/stop":
+            return self._dispatch_cmd_stop(user_id)
+
+    #   Virtual method replace
+    def _handle_callback(self, query):
+        data = query["data"]
+        user_id = query["from"]["id"]
+
+        if data == "start":
+            return [self.CallbackResponse(),
+                    self._dispatch_cmd_start(user_id),
+                    ]
+        elif data == "stop":
+            self._dispatch_cmd_stop(user_id)
+            return [self.CallbackResponse(),
+                    self._dispatch_cmd_help(user_id),
+                    ]
 
     #   background daemon worker
     def _scheduler(self):
@@ -46,68 +63,40 @@ class TBot():
                     for item in delta:
                         delta_tag |= item.tag
 
-                    text = TBot.render_data(delta)
+                    text = self.render_data(delta)
 
                     for item in RusTbotChat.chat_list():
-                        self.bot.send_message(item.chat_id,
-                                              text=text,
-                                              disable_notification=not bool(delta_tag & item.tag_mask),
-                                              parse_mode=telegram.ParseMode.HTML)
+                        try:
+                            self.send_message(self.MessageResponse(
+                                text=text,
+                                uid=item.chat_id,
+                                no_notif=not bool(delta_tag & item.tag_mask)
+                            ))
+                        except Exception:
+                            logging.exception("scheduler dispatch")
+
+                    RusTbotStore.remove_last(200)
             except Exception:
                 logging.exception("Scheduler error:")
 
             time.sleep(60 * self.interval)
 
-    #   Webhook update data handler
-    def put_update(self, update):
-        if "message" in update:
-            text = update["message"]["text"]
-            user_id = update["message"]["from"]["id"]
-            cmd, *arg = text.split(" ")
-            res = None
-            if cmd == "/help":
-                res = self._dispatch_cmd_help(user_id)
-            elif cmd == "/start":
-                res = self._dispatch_cmd_start(user_id)
-            elif cmd == "/stop":
-                res = self._dispatch_cmd_stop(user_id)
-            elif cmd == "/notif":
-                res = TBot.CmdResponse()
-                if not arg or arg[0] == "all":
-                    RusTbotChat.update_chat_id(user_id, -1)
-                    res.text = "Все уведомления."
-                elif arg[0] == "hot":
-                    RusTbotChat.update_chat_id(user_id, 1)
-                    res.text = "Уведомления только для 'Горячих' тем."
-            else:
-                res = self._dispatch_cmd_unknown(user_id)
-            if res:
-                self.bot.send_message(chat_id=user_id,
-                                      text=res.text,
-                                      parse_mode=telegram.ParseMode.HTML,
-                                      disable_notification=res.no_notif
-                                      )
-
-    #   Dispatch webhook url to telegram server
-    def set_webhook_url(self, url, cert_file_path=""):
-        try:
-            with open(cert_file_path, "rb") as cert_file:
-                self.bot.setWebhook(url, cert_file)
-                logging.debug("Cert is send")
-        except FileNotFoundError:
-            self.bot.setWebhook(url)
-
-    #   Remove binded webhook
-    def delete_webhook_url(self):
-        self.bot.deleteWebhook()
-
     #   Dispatch bot commands
     def _dispatch_cmd_help(self, chat_id):
-        res = TBot.CmdResponse(text="Вы подписаны!\n" if RusTbotChat.is_chat_id(chat_id) else "Вы не подписаны.\n")
-        res.no_notif = True
+        is_subscribed = RusTbotChat.is_chat_id(chat_id)
+        res = self.MessageResponse(
+            text="Вы подписаны!\n" if is_subscribed else "Вы не подписаны.\n",
+            no_notif=True,
+            uid=chat_id,
+            inline_buttons=[[
+                super().InlineKeyboardButton(text="Отписаться",
+                                             callback_data="stop") if is_subscribed else
+                super().InlineKeyboardButton(text="Подписаться",
+                                             callback_data="start")
+            ]]
+        )
         res.text += "/start - Подписаться на рассылку\n" \
                     "/stop - Отписаться\n" \
-                    "/notif [all | hot] - Уведомления для всех/важных\n" \
                     "/help - Справка"
         return res
 
@@ -115,7 +104,7 @@ class TBot():
         try:
             RusTbotChat.update_chat_id(chat_id)
             res = self._dispatch_cmd_help(chat_id)
-            res.text += "\nПоследние новости:\n" + TBot.render_data(RusTbotStore.get_last())
+            res.text += "\nПоследние новости:\n" + self.render_data(RusTbotStore.get_last())
             return res
         except Exception:
             logging.exception("Error cmd start")
@@ -123,12 +112,9 @@ class TBot():
     def _dispatch_cmd_stop(self, chat_id):
         try:
             RusTbotChat.remove_chat_id(chat_id)
-            return TBot.CmdResponse(text="Bye.")
+            return self.MessageResponse(text="Bye.", uid=chat_id)
         except Exception:
             logging.exception("Error cmd stop")
-
-    def _dispatch_cmd_unknown(self, chat_id):
-        return TBot.CmdResponse(text="I dont understand you")
 
     @staticmethod
     def render_data(data):

@@ -47,7 +47,6 @@ class KinoTBot(TBot):
     def _handle_callback(self, query):
         data = query["data"]
         user_id = query["from"]["id"]
-        res = None
 
         if data == "start":
             return [self.CallbackResponse(),
