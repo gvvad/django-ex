@@ -61,10 +61,10 @@ class TolokaTBot(TBot):
 
     #   background daemon worker
     def _scheduler(self):
-        logging.info("Start scheduler")
+        logging.info("Start toloka scheduler")
         while True:
             try:
-                logging.debug("Sheduler call update")
+                logging.debug("Sheduler toloka update")
                 delta = TbotStoreModel.update_posts()
 
                 if delta:

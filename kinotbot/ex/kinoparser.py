@@ -1,14 +1,11 @@
 import logging
-import re
-from urllib.request import Request, urlopen
+#import re
 from lxml import html
+from project.modules.webparser import WebParser
 
 
-class KinoWebParser():
-    HEADERS = {
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"
-    }
-    PREURL = "http://kinozal.tv"
+class KinoWebParser(WebParser):
+    HOST = "http://kinozal.tv"
 
     TAG_HD = 0x1
 
@@ -30,23 +27,17 @@ class KinoWebParser():
     @staticmethod
     def parse_top():
         try:
-            logging.debug("parse_top_hd requested")
-            r = Request(KinoWebParser.PREURL + "/top.php?t=0&d=11&k=0&f=2&w=1&s=0", headers=KinoWebParser.HEADERS)
-            content = urlopen(r).read()
-            logging.debug("Requested success")
+            content = KinoWebParser.sync_request(KinoWebParser.HOST + "/top.php?t=0&d=11&k=0&f=2&w=1&s=0")
 
             new_data = []
             tree = html.fromstring(content).xpath("//div[contains(@class,'bx1')]/a")
             for a in tree:
                 try:
-                    poster = a.xpath(".//img")[0].attrib["src"]
-                    if re.search("^//", poster):
-                        poster = "http:" + poster
-                    elif re.search("^/", poster):
-                        poster = KinoWebParser.PREURL + poster
+                    link = KinoWebParser.link_from_xnode(a, KinoWebParser.HOST)
+                    poster = KinoWebParser.link_from_xnode(a.xpath(".//img")[0], KinoWebParser.HOST)
+
                     title_ru, title_en = "", ""
                     year = 0
-                    link = KinoWebParser.PREURL + a.attrib["href"]
                     text = a.attrib["title"]
                     items = [s.strip() for s in text.split("/")]
                     try:

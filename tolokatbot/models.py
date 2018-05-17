@@ -60,7 +60,7 @@ class TbotChatModel(models.Model):
     @staticmethod
     def get_notification_list():
         query = TbotChatModel.objects.raw("SELECT * "
-                              "FROM tolokatbot_tbotchatmodel LEFT JOIN tolokatbot_tbotstoremodel "
+                              "FROM tolokatbot_tbotchatmodel LEFT JOIN tolokatbot_tbotstoremodel ON '1' "
                               "WHERE add_time > notif_date")
         res = dict()
         for item in query:
@@ -147,7 +147,7 @@ class TbotStoreModel(models.Model):
             yield item
 
     @staticmethod
-    def remove_last(count=500):
+    def remove_last(count=200):
         tmp = TbotStoreModel.objects.order_by("-add_time").values_list("id", flat=True)[:count]
         TbotStoreModel.objects.exclude(pk__in=list(tmp)).delete()
 
