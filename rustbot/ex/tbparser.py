@@ -2,21 +2,22 @@ import logging
 from lxml import html
 from project.modules.webparser import WebParser
 
+
 class RustorkaWebParser(WebParser):
     HOST = "http://rustorka.com/forum"
 
-    @staticmethod
-    def get_hot():
+    @classmethod
+    def get_hot(cls):
         try:
-            content = RustorkaWebParser.sync_request(RustorkaWebParser.HOST + "/viewforum.php?f=1840")
+            content = cls.sync_request("/viewforum.php?f=1840")
 
             new_data = []
             tree = html.fromstring(content).xpath("//*[@id='forum-table']//tr[@id]")
             for tr in tree:
                 try:
-                    _title = RustorkaWebParser.text_from_xnode(tr.xpath(".//a[@class='topictitle']")[0])
-                    _link = RustorkaWebParser.link_from_xnode(tr.xpath(".//a[@class='topictitle']")[0], RustorkaWebParser.HOST)
-                    _author = RustorkaWebParser.text_from_xnode(tr.xpath("./td/p/a")[0])
+                    _title = cls.text_from_xnode(tr.xpath(".//a[@class='topictitle']")[0])
+                    _link = cls.link_from_xnode(tr.xpath(".//a[@class='topictitle']")[0])
+                    _author = cls.text_from_xnode(tr.xpath("./td/p/a")[0])
 
                     new_data.append({"title": _title,
                                      "link": _link,
@@ -30,10 +31,10 @@ class RustorkaWebParser(WebParser):
             logging.exception("get_hot")
             return []
 
-    @staticmethod
-    def get_hot_news():
+    @classmethod
+    def get_hot_news(cls):
         try:
-            content = RustorkaWebParser.sync_request(RustorkaWebParser.HOST + "/viewforum.php?f=1398")
+            content = cls.sync_request("/viewforum.php?f=1398")
 
             new_data = []
             tree = html.fromstring(content).xpath("//*[@id='forum-table']//tr[@id]")
@@ -41,9 +42,9 @@ class RustorkaWebParser(WebParser):
                 try:
                     a = tr.xpath(".//a[contains(@class,'torTopic')]")[0]
 
-                    _title = RustorkaWebParser.text_from_xnode(a.xpath(".//*")[0])
-                    _link = RustorkaWebParser.link_from_xnode(a, RustorkaWebParser.HOST)
-                    _author = RustorkaWebParser.text_from_xnode(tr.xpath(".//a[contains(@class,'topicAuthor')]")[0])
+                    _title = cls.text_from_xnode(a.xpath(".//*")[0])
+                    _link = cls.link_from_xnode(a)
+                    _author = cls.text_from_xnode(tr.xpath(".//a[contains(@class,'topicAuthor')]")[0])
 
                     new_data.append({"title": _title,
                                      "link": _link,

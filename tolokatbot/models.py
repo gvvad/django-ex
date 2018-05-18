@@ -2,69 +2,42 @@ from django.db import models
 from django.utils import timezone
 
 from .ex.parser import TolokaWebParser
+from project.modules.model import UserModel
 
 
-class TbotChatModel(models.Model):
-    chat_id = models.CharField(max_length=32, unique=True)
-    notif_date = models.DateTimeField(auto_now_add=True)
+class TbotChatModel(UserModel):
     tag_mask = models.IntegerField(default=-1)
 
-    @staticmethod
-    def is_chat_id(_id):
-        return bool(TbotChatModel.objects.filter(chat_id=_id))
-
-    @staticmethod
-    def get_tag_mask(user_id):
-        r = TbotChatModel.objects.filter(user_id=user_id)
+    @classmethod
+    def get_tag_mask(cls, user_id):
+        r = cls.objects.filter(user_id=user_id)
         if r:
             return r[0].tag_mask
         return None
 
-    @staticmethod
-    def get_notif_date(user_id):
-        r = TbotChatModel.objects.filter(user_id=user_id)
-        if r:
-            return r[0].notif_date
-
-    @staticmethod
-    def notif_user(user_id):
-        r = TbotChatModel.objects.filter(chat_id=user_id)
-        if r:
-            r[0].notif_date = timezone.now()
-            r[0].save()
-
-    @staticmethod
-    def update_chat_id(chat_id, notif_date=None, tag_mask=-1):
-        r = TbotChatModel.objects.filter(chat_id=chat_id)
+    @classmethod
+    def update_user(cls, user_id, up_date=None, tag_mask=-1):
+        r = cls.objects.filter(user_id=user_id)
         if not r:
-            TbotChatModel(
-                chat_id=chat_id,
+            cls(
+                user_id=user_id,
                 tag_mask=tag_mask
             ).save()
         else:
             if r[0].tag_mask != tag_mask:
                 r[0].tag_mask = tag_mask
-            if notif_date:
-                r[0].notif_date = notif_date
+            if up_date:
+                r[0].up_date = up_date
             r[0].save()
 
-    @staticmethod
-    def remove_chat_id(_id):
-        TbotChatModel.objects.filter(chat_id=_id).delete()
-
-    @staticmethod
-    def chat_list():
-        for item in TbotChatModel.objects.all():
-            yield item
-
-    @staticmethod
-    def get_notification_list():
-        query = TbotChatModel.objects.raw("SELECT * "
-                              "FROM tolokatbot_tbotchatmodel LEFT JOIN tolokatbot_tbotstoremodel ON '1' "
-                              "WHERE add_time > notif_date")
+    @classmethod
+    def get_notification_list(cls):
+        query = cls.objects.raw("SELECT * "
+                              "FROM tolokatbot_tbotchatmodel LEFT JOIN tolokatbot_tbotstoremodel "
+                              "ON add_time > up_date")
         res = dict()
         for item in query:
-            res.setdefault(item.chat_id, []).append(item)
+            res.setdefault(item.user_id, []).append(item)
         return res
 
 

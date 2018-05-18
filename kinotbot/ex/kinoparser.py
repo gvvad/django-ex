@@ -24,20 +24,19 @@ class KinoWebParser(WebParser):
             self.poster=poster
             self.tag=tag
 
-    @staticmethod
-    def parse_top():
+    @classmethod
+    def parse_top(cls):
         try:
-            content = KinoWebParser.sync_request(KinoWebParser.HOST + "/top.php?t=0&d=11&k=0&f=2&w=1&s=0")
+            content = cls.sync_request("/top.php?t=0&d=11&k=0&f=2&w=1&s=0")
 
             new_data = []
             tree = html.fromstring(content).xpath("//div[contains(@class,'bx1')]/a")
             for a in tree:
                 try:
-                    link = KinoWebParser.link_from_xnode(a, KinoWebParser.HOST)
-                    poster = KinoWebParser.link_from_xnode(a.xpath(".//img")[0], KinoWebParser.HOST)
+                    link = cls.link_from_xnode(a)
+                    poster = cls.link_from_xnode(a.xpath(".//img")[0])
 
                     title_ru, title_en = "", ""
-                    year = 0
                     text = a.attrib["title"]
                     items = [s.strip() for s in text.split("/")]
                     try:
@@ -51,12 +50,12 @@ class KinoWebParser(WebParser):
                         except Exception:
                             raise Exception
 
-                    new_data.append(KinoWebParser.Container(title_ru=title_ru,
+                    new_data.append(cls.Container(title_ru=title_ru,
                                                             title_en=title_en,
                                                             year=year,
                                                             poster=poster,
                                                             link=link,
-                                                            tag=KinoWebParser.TAG_HD))
+                                                            tag=cls.TAG_HD))
                 except Exception:
                     logging.exception("TBStorage udpate")
 

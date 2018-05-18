@@ -64,6 +64,8 @@ class TolokaTBot(TBot):
         logging.info("Start toloka scheduler")
         while True:
             try:
+                a = TbotChatModel.user_list()
+
                 logging.debug("Sheduler toloka update")
                 delta = TbotStoreModel.update_posts()
 
@@ -88,7 +90,7 @@ class TolokaTBot(TBot):
                                 except Exception:
                                     pass
 
-                            TbotChatModel.notif_user(key)
+                            TbotChatModel.up_date(key)
                         except Exception:
                             pass
 
@@ -100,7 +102,7 @@ class TolokaTBot(TBot):
 
     #   Dispatch bot commands
     def _dispatch_cmd_help(self, chat_id):
-        is_subscribed = TbotChatModel.is_chat_id(chat_id)
+        is_subscribed = TbotChatModel.is_user(chat_id)
         res = super().MessageResponse(text="Вы подписаны!\n" if is_subscribed else "Вы не подписаны.\n",
                                       inline_buttons=[[
                                           super().InlineKeyboardButton(text="Отписаться",
@@ -117,14 +119,14 @@ class TolokaTBot(TBot):
 
     def _dispatch_cmd_re(self, user_id, text, username=""):
         if text:
-            self.bot.send_message(chat_id=self.master_user, text="From: {}\n{}".format(username, text))
-            return super().MessageResponse(text="Спасибо за Ваш отзыв.")
+            self.send_message(self.MessageResponse(text="From: {}\n{}".format(username, text), uid=self.master_user))
+            return self.MessageResponse(text="Спасибо за Ваш отзыв.")
         else:
             return None
 
     def _dispatch_cmd_start(self, chat_id):
         try:
-            TbotChatModel.update_chat_id(chat_id)
+            TbotChatModel.update_user(chat_id)
             res = self._dispatch_cmd_help(chat_id)
             res.text += "\nПоследние новости:\n" + self.render_data(TbotStoreModel.get_last())
             return res
@@ -133,7 +135,7 @@ class TolokaTBot(TBot):
 
     def _dispatch_cmd_stop(self, chat_id):
         try:
-            TbotChatModel.remove_chat_id(chat_id)
+            TbotChatModel.remove_user(chat_id)
         except Exception:
             logging.exception("Error cmd stop")
 
