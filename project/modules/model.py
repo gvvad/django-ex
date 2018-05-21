@@ -5,6 +5,7 @@ from django.utils import timezone
 class UserModel(models.Model):
     user_id = models.CharField(max_length=32, unique=True)
     up_date = models.DateTimeField(auto_now_add=True)
+    awaiting = models.TextField(default="")
 
     class Meta:
         abstract = True
@@ -18,6 +19,24 @@ class UserModel(models.Model):
         r = cls.objects.filter(user_id=user_id)
         if r:
             return r[0].up_date
+
+    @classmethod
+    def set_awaiting(cls, user_id, data):
+        r = cls.objects.filter(user_id=user_id)
+        if r:
+            r[0].awaiting = data
+            r[0].save()
+
+    @classmethod
+    def handle_awaiting(cls, user_id):
+        r = cls.objects.filter(user_id=user_id)
+        if r:
+            res = r[0].awaiting
+            r[0].awaiting = ""
+            r[0].save()
+            return res
+
+        return None
 
     @classmethod
     def set_up_date(cls, user_id, date=timezone.now()):

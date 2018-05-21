@@ -90,7 +90,7 @@ class TolokaTBot(TBot):
                                 except Exception:
                                     pass
 
-                            TbotChatModel.up_date(key)
+                            TbotChatModel.set_up_date(key)
                         except Exception:
                             pass
 
@@ -133,7 +133,8 @@ class TolokaTBot(TBot):
         except Exception:
             logging.exception("Error cmd start")
 
-    def _dispatch_cmd_stop(self, chat_id):
+    @staticmethod
+    def _dispatch_cmd_stop(chat_id):
         try:
             TbotChatModel.remove_user(chat_id)
         except Exception:

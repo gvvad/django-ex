@@ -1,5 +1,5 @@
 from django.db import models
-from django.utils import timezone
+from datetime import datetime
 
 from .ex.parser import TolokaWebParser
 from project.modules.model import UserModel
@@ -73,7 +73,8 @@ class TbotStoreModel(models.Model):
             )
             new.save()
             return new
-        return r[0]
+
+        return None
 
     @staticmethod
     def update_entry(title_a, title_b, link=None, year=None, poster=None, tag=None):
@@ -83,13 +84,13 @@ class TbotStoreModel(models.Model):
         )
 
         if r:
-            if link != None:
+            if link:
                 r.link = link
-            if year != None:
+            if year:
                 r.year = year
-            if poster != None:
+            if poster:
                 r.poster = poster
-            if tag != None:
+            if tag:
                 r.tag = tag
             r.save()
 
@@ -124,11 +125,14 @@ class TbotStoreModel(models.Model):
         tmp = TbotStoreModel.objects.order_by("-add_time").values_list("id", flat=True)[:count]
         TbotStoreModel.objects.exclude(pk__in=list(tmp)).delete()
 
-    @staticmethod
-    def update_posts():
+    @classmethod
+    def update_posts(cls):
         delta = []
-        delta += TbotStoreModel._store_posts(TolokaWebParser.parse_top_hd("2018"))
-        delta += TbotStoreModel._store_posts(TolokaWebParser.parse_top_hd("2017"))
-        delta += TbotStoreModel._store_posts(TolokaWebParser.parse_top_hd("2016"))
+        y = datetime.now().year
+
+        #   newest post for last 3 years
+        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y)))
+        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y-1)))
+        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y-2)))
 
         return delta
