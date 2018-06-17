@@ -1,4 +1,5 @@
 from django.db import models
+from django.db import transaction
 from django.utils import timezone
 from .ex.kinoparser import KinoWebParser
 
@@ -66,6 +67,9 @@ class TbotStoreModel(models.Model):
     poster = models.CharField(max_length=256)
     tag = models.IntegerField(default=-1)
 
+    class EntryExistException(Exception):
+        pass
+
     class Container:
         def __init__(self, title_ru="", title_en="", year=0, poster="", link="", tag=-1):
             self.title_en = title_en
@@ -75,11 +79,11 @@ class TbotStoreModel(models.Model):
             self.link = link
             self.tag = tag
 
-    @staticmethod
-    def update_entry(title_ru="", title_en="", year=0, poster="", link="", tag=-1):
-        r = TbotStoreModel.objects.filter(title_ru=title_ru, title_en=title_en)
-        if not r:
-            TbotStoreModel(
+    @classmethod
+    @transaction.atomic
+    def update_entry(cls, title_ru="", title_en="", year=0, poster="", link="", tag=-1):
+        if cls.objects.filter(title_ru=title_ru, title_en=title_en).count() == 0:
+            cls(
                 title_ru=title_ru,
                 title_en=title_en,
                 year=year,
@@ -87,10 +91,12 @@ class TbotStoreModel(models.Model):
                 link=link,
                 tag=tag
             ).save()
+            if cls.objects.filter(title_ru=title_ru, title_en=title_en).count() != 1:
+                raise cls.EntryExistException
             return True
+        '''
         else:
             pass
-            '''
             if r[0].title_ru != title_ru and r[0].title_en != title_en:
                 r[0].title_ru = title_ru
                 r[0].title_en = title_en
@@ -100,24 +106,27 @@ class TbotStoreModel(models.Model):
                 r[0].tag = tag
                 r[0].save()
             '''
-        return False
+        raise cls.EntryExistException
 
-    @staticmethod
-    def _store_entries(items, tag=-1):
+    @classmethod
+    def _store_entries(cls, items, tag=-1):
         delta = []
         for item in items:
-            if TbotStoreModel.update_entry(title_ru=item.title_ru,
+            try:
+                cls.update_entry(title_ru=item.title_ru,
+                                 title_en=item.title_en,
+                                 year=item.year,
+                                 poster=item.poster,
+                                 link=item.link,
+                                 tag=tag)
+                delta.append(cls.Container(title_ru=item.title_ru,
                                            title_en=item.title_en,
                                            year=item.year,
                                            poster=item.poster,
                                            link=item.link,
-                                           tag=tag):
-                delta.append(TbotStoreModel.Container(title_ru=item.title_ru,
-                                                      title_en=item.title_en,
-                                                      year=item.year,
-                                                      poster=item.poster,
-                                                      link=item.link,
-                                                      tag=tag))
+                                           tag=tag))
+            except cls.EntryExistException:
+                pass
 
         return delta
 

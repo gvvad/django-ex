@@ -47,11 +47,17 @@ class TolokaWebParser(WebParser):
 
                     pars = [item.strip() for item in btext.split("/")]
                     title_a = pars[0]
-                    groups = re.search("(.*)( )(\([0-9]+)", pars[1])
-                    try:
-                        title_b = groups.group(1)
-                    except Exception:
-                        raise Exception
+                    title_b = ""
+
+                    groups = None
+                    for item in pars:
+                        groups = re.search("(.*)( )(\([0-9]+)", item)
+                        if groups:
+                            try:
+                                title_b = groups.group(1)
+                            except Exception:
+                                raise Exception
+                            break
 
                     try:
                         year = int(groups.group(3)[1:5])

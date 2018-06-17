@@ -1,4 +1,5 @@
 from django.db import models
+from django.db import transaction
 from datetime import datetime
 
 from .ex.parser import TolokaWebParser
@@ -50,6 +51,9 @@ class TbotStoreModel(models.Model):
     poster = models.CharField(max_length=256)
     tag = models.IntegerField(default=-1)
 
+    class EntryExistException(Exception):
+        pass
+
     class Container:
         def __init__(self, title_a="", title_b="", year=0, poster="", link="", tag=-1):
             self.title_a = title_a
@@ -59,11 +63,14 @@ class TbotStoreModel(models.Model):
             self.link = link
             self.tag = tag
 
-    @staticmethod
-    def append_entry(title_a, title_b, link=None, year=None, poster=None, tag=None):
-        r = TbotStoreModel.objects.filter(title_a=title_a, title_b=title_b)
-        if not r:
-            new = TbotStoreModel(
+    @classmethod
+    @transaction.atomic
+    def append_entry(cls, title_a, title_b, link=None, year=None, poster=None, tag=None):
+        if cls.objects.filter(title_a=title_a, title_b=title_b).count() == 0:
+            if not poster:
+                poster = TolokaWebParser.parse_poster(link)
+
+            new = cls(
                 title_a=title_a or "",
                 title_b=title_b or "",
                 year=year or 0,
@@ -72,10 +79,13 @@ class TbotStoreModel(models.Model):
                 tag=tag or 0
             )
             new.save()
+            if cls.objects.filter(title_a=title_a, title_b=title_b).count() != 1:
+                raise cls.EntryExistException
             return new
 
-        return None
+        raise cls.EntryExistException
 
+    '''
     @staticmethod
     def update_entry(title_a, title_b, link=None, year=None, poster=None, tag=None):
         r = TbotStoreModel.objects.filter(
@@ -95,35 +105,41 @@ class TbotStoreModel(models.Model):
             r.save()
 
         return r
+    '''
 
-    @staticmethod
-    def _store_posts(items):
+    @classmethod
+    def _store_posts(cls, items):
         delta = []
         for item in items:
-            r = TbotStoreModel.append_entry(title_a=item.title_a,
-                                            title_b=item.title_b,
-                                            link=item.link,
-                                            year=item.year,
-                                            tag=item.tag)
-            if r:
-                delta.append(r)
+            try:
+                r = cls.append_entry(
+                    title_a=item.title_a,
+                    title_b=item.title_b,
+                    link=item.link,
+                    year=item.year,
+                    tag=item.tag
+                )
+                if r:
+                    delta.append(r)
+            except cls.EntryExistException:
+                pass
 
         return delta
 
-    @staticmethod
-    def get_not_earlier(date):
-        for item in TbotStoreModel.objects.filter(add_time__gt=date).order_by("-add_time"):
+    @classmethod
+    def get_not_earlier(cls, date):
+        for item in cls.objects.filter(add_time__gt=date).order_by("-add_time"):
             yield item
 
-    @staticmethod
-    def get_last(count=20):
-        for item in TbotStoreModel.objects.order_by("-add_time")[:count]:
+    @classmethod
+    def get_last(cls, count=20):
+        for item in cls.objects.order_by("-add_time")[:count]:
             yield item
 
-    @staticmethod
-    def remove_last(count=200):
-        tmp = TbotStoreModel.objects.order_by("-add_time").values_list("id", flat=True)[:count]
-        TbotStoreModel.objects.exclude(pk__in=list(tmp)).delete()
+    @classmethod
+    def remove_last(cls, count=200):
+        tmp = cls.objects.order_by("-add_time").values_list("id", flat=True)[:count]
+        cls.objects.exclude(pk__in=list(tmp)).delete()
 
     @classmethod
     def update_posts(cls):
