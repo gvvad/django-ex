@@ -85,28 +85,6 @@ class TbotStoreModel(models.Model):
 
         raise cls.EntryExistException
 
-    '''
-    @staticmethod
-    def update_entry(title_a, title_b, link=None, year=None, poster=None, tag=None):
-        r = TbotStoreModel.objects.filter(
-                title_a=title_a,
-                title_b=title_b
-        )
-
-        if r:
-            if link:
-                r.link = link
-            if year:
-                r.year = year
-            if poster:
-                r.poster = poster
-            if tag:
-                r.tag = tag
-            r.save()
-
-        return r
-    '''
-
     @classmethod
     def _store_posts(cls, items):
         delta = []
@@ -145,10 +123,17 @@ class TbotStoreModel(models.Model):
     def update_posts(cls):
         delta = []
         y = datetime.now().year
-
-        #   newest post for last 3 years
-        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y)))
-        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y-1)))
-        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y-2)))
+        try:
+            delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y)))
+        except Exception:
+            pass
+        try:
+            delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y - 1)))
+        except Exception:
+            pass
+        try:
+            delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y - 2)))
+        except Exception:
+            pass
 
         return delta

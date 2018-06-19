@@ -64,10 +64,9 @@ class TolokaTBot(TBot):
         logging.info("Start toloka scheduler")
         while True:
             try:
-                a = TbotChatModel.user_list()
-
                 logging.debug("Sheduler toloka update")
                 delta = TbotStoreModel.update_posts()
+                logging.debug("toloka update done", delta)
 
                 if delta:
                     for key, value in TbotChatModel.get_notification_list().items():
