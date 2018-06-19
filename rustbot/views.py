@@ -19,10 +19,10 @@ tbot_token = os.getenv("RUS_TBOT_TOKEN") or "000-xxx"
 try:
     tbot = RusTBot(tbot_token)
     tbot.set_webhook_url(host_url + secret_path, str(os.getenv("CERT_FILE_PATH")))
+except RusTBot.EInvalidToken:
+    logging.info("RUS_TBOT_TOKEN invalid")
 except Exception:
     logging.exception("Rus tbot initialize")
-    pass
-
 
 #   app request handler
 def index(request):

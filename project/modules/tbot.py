@@ -5,6 +5,7 @@ import logging
 
 class TBot(object):
     token = ""
+    EInvalidToken = telegram.error.InvalidToken
 
     class InlineKeyboardButton(telegram.InlineKeyboardButton):
         def __init__(self, *args, **kwargs):

@@ -123,17 +123,9 @@ class TbotStoreModel(models.Model):
     def update_posts(cls):
         delta = []
         y = datetime.now().year
-        try:
-            delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y)))
-        except Exception:
-            pass
-        try:
-            delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y - 1)))
-        except Exception:
-            pass
-        try:
-            delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y - 2)))
-        except Exception:
-            pass
+
+        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y)))
+        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y - 1)))
+        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y - 2)))
 
         return delta

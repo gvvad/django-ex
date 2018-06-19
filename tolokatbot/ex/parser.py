@@ -35,10 +35,13 @@ class TolokaWebParser(WebParser):
     @classmethod
     def parse_top_hd(cls, search=""):
         try:
+            logging.debug("toloka parser request top_hd search:%s" % search)
             content = cls.sync_request("/tracker.php?f=96&nm={}&tm=7".format(search))
 
             new_data = []
             tree = html.fromstring(content).xpath("//table[contains(@class,'forumline')]//tr[@class]")
+
+            logging.debug("toloka parser begin parsing search:%s" % search)
             for tr in tree:
                 try:
                     a = tr.xpath("./td[contains(@class,'topictitle')]//a[contains(@class,'genmed')]")[0]
@@ -72,6 +75,7 @@ class TolokaWebParser(WebParser):
                 except Exception:
                     logging.exception("TolokaWebParser udpate")
 
+            logging.debug("toloka parser return search:%s" % search)
             return new_data
         except Exception:
             logging.exception("get_hot")

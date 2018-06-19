@@ -5,7 +5,6 @@ from ..models import TbotChatModel
 from ..models import TbotStoreModel
 from project.modules.tbot import TBot
 
-
 class TolokaTBot(TBot):
     scheduler_thread = None
     interval = 30
@@ -64,10 +63,10 @@ class TolokaTBot(TBot):
         logging.info("Start toloka scheduler")
         while True:
             try:
-                logging.debug("Sheduler toloka update")
+                logging.debug("Sheduler toloka BEGIN update")
                 delta = TbotStoreModel.update_posts()
-                logging.debug("toloka update done", delta)
 
+                logging.debug("Sheduler toloka END update: {}".format(delta))
                 if delta:
                     for key, value in TbotChatModel.get_notification_list().items():
                         try:
@@ -89,6 +88,7 @@ class TolokaTBot(TBot):
                                 except Exception:
                                     pass
 
+                            logging.debug("toloka set_up_date key:{}".format(key))
                             TbotChatModel.set_up_date(key)
                         except Exception:
                             pass

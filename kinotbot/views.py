@@ -17,9 +17,10 @@ secret_path += "/"
 host_url = os.getenv("HOST_URL") or "https://0.0.0.0:8443/"
 tbot_token = os.getenv("KINO_TBOT_TOKEN") or "000-xxx"
 try:
-    pass
     tbot = KinoTBot(tbot_token)
     tbot.set_webhook_url(host_url + secret_path, str(os.getenv("CERT_FILE_PATH")))
+except KinoTBot.EInvalidToken:
+    logging.info("KINO_TBOT_TOKEN invalid")
 except Exception:
     logging.exception("Kino tbot initialize")
 

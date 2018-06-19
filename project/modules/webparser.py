@@ -17,7 +17,7 @@ class WebParser(object):
         logging.debug("web parser request")
         r = Request(cls.beatify_url(url), headers=cls.HEADERS)
         content = urlopen(r).read()
-
+        logging.debug("web parser request return")
         return content
 
     @classmethod
