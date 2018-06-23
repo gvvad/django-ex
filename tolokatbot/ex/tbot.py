@@ -91,6 +91,7 @@ class TolokaTBot(TBot):
                             logging.debug("toloka set_up_date key:{}".format(key))
                             TbotChatModel.set_up_date(key)
                         except Exception:
+                            logging.exception("Sheduler toloka set up date")
                             pass
 
                     TbotStoreModel.remove_last()
