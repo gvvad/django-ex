@@ -1,11 +1,9 @@
 from django.db import models
 from django.utils import timezone
-import logging
-
 
 class UserModel(models.Model):
     user_id = models.CharField(max_length=32, unique=True)
-    up_date = models.DateTimeField(auto_now_add=True)
+    up_date = models.DateTimeField()
     awaiting = models.TextField(default="")
 
     class Meta:
@@ -40,11 +38,10 @@ class UserModel(models.Model):
         return None
 
     @classmethod
-    def set_up_date(cls, user_id, date=timezone.now()):
+    def set_up_date(cls, user_id, date=None):
         r = cls.objects.filter(user_id=user_id)
         if r:
-            logging.debug("set up_date {}".format(date.strftime("%Y-%m-%d %H:%M")))
-            r[0].up_date = date
+            r[0].up_date = date or timezone.now()
             r[0].save()
 
     @classmethod

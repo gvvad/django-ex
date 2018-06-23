@@ -5,7 +5,6 @@ from django.utils import timezone
 from .ex.parser import TolokaWebParser
 from project.modules.model import UserModel
 
-
 class TbotChatModel(UserModel):
     tag_mask = models.IntegerField(default=-1)
 
@@ -43,7 +42,7 @@ class TbotChatModel(UserModel):
 
 
 class TbotStoreModel(models.Model):
-    add_time = models.DateTimeField(auto_now_add=True)
+    add_time = models.DateTimeField()
     title_a = models.CharField(max_length=256)
     title_b = models.CharField(max_length=256)
     link = models.CharField(max_length=256)

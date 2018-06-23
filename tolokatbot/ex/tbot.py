@@ -67,7 +67,6 @@ class TolokaTBot(TBot):
                 logging.debug("Sheduler toloka BEGIN update")
                 delta = TbotStoreModel.update_posts()
 
-                logging.debug("Sheduler toloka END update: {}".format(delta))
                 if delta:
                     for key, value in TbotChatModel.get_notification_list().items():
                         try:
@@ -89,7 +88,6 @@ class TolokaTBot(TBot):
                                 except Exception:
                                     pass
 
-                            logging.debug("toloka set_up_date key:{}".format(key))
                             TbotChatModel.set_up_date(key)
                         except Exception:
                             logging.exception("Sheduler toloka set up date")
@@ -99,7 +97,6 @@ class TolokaTBot(TBot):
             except Exception:
                 logging.exception("Scheduler error:")
 
-            logging.debug("toloka sched sleep for {}".format(60 * self.interval))
             time.sleep(60 * self.interval)
 
     #   Dispatch bot commands
