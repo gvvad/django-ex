@@ -1,6 +1,8 @@
 import threading, time, os
 import logging
 
+from urllib.parse import urlencode
+
 from ..models import TbotChatModel
 from ..models import TbotStoreModel
 from project.modules.tbot import TBot
@@ -27,8 +29,8 @@ class TolokaTBot(TBot):
         self.scheduler_thread = threading.Thread(target=self._scheduler, daemon=True)
         self.scheduler_thread.start()
 
-    #   Virtual method replace
     def _handle_message(self, message):
+        """Replacing method for handle messages"""
         text = message["text"]
         username = message["from"]["username"]
         user_id = message["from"]["id"]
@@ -43,11 +45,10 @@ class TolokaTBot(TBot):
         elif cmd == "/re":
             return self._dispatch_cmd_re(user_id, text[4:], username=username)
 
-    #   Virtual method replace
     def _handle_callback(self, query):
+        """Replacing method for handle queries"""
         data = query["data"]
         user_id = query["from"]["id"]
-        res = None
 
         if data == "start":
             return [self.CallbackResponse(),
@@ -59,8 +60,8 @@ class TolokaTBot(TBot):
                     self._dispatch_cmd_help(user_id),
                     ]
 
-    #   background daemon worker
     def _scheduler(self):
+        """background daemon worker"""
         logging.info("Start toloka scheduler")
         while True:
             try:
@@ -72,12 +73,8 @@ class TolokaTBot(TBot):
                         try:
                             for post in value:
                                 try:
-                                    text = "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>". \
-                                        format(post.link,
-                                               post.title_a,
-                                               post.title_b,
-                                               post.year,
-                                               "HD" if bool(post.tag & 1) else "SD")
+                                    # Html of post
+                                    text = self.get_html_post(post)
                                     if post.poster:
                                         self.send_photo(self.PhotoResponse(caption=text,
                                                                            photo=post.poster,
@@ -140,15 +137,23 @@ class TolokaTBot(TBot):
             logging.exception("Error cmd stop")
 
     def _dispatch_cmd_unknown(self):
-        return super().MessageResponse(text="I dont understand you")
+        return super().MessageResponse(text="I don`t understand you")
 
     @staticmethod
-    def render_data(data):
-        return "\n".join(
-            ["<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>".format(
-                item.link,
-                item.title_a,
-                item.title_b,
-                item.year,
-                "HD" if bool(item.tag & 1) else "SD"
-            ) for item in data])
+    def get_html_post(data):
+        """Return html text for post item"""
+        return "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b> <a href='https://toloka.to/tracker.php?{5}'>Найти</a>".format(
+            data.link,
+            data.title_a,
+            data.title_b,
+            data.year,
+            "HD" if bool(data.tag & 1) else "SD",
+            urlencode({"f": "96",
+                       "nm": str(data.title_b) + " " + str(data.year)
+                       })
+            )
+
+    @classmethod
+    def render_data(cls, data):
+        """Return html for post`s array"""
+        return "\n".join([cls.get_html_post(item) for item in data])
