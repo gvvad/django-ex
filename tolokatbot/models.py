@@ -1,7 +1,7 @@
 from django.db import models
 from django.db import transaction
 from datetime import datetime
-
+from django.utils import timezone
 from .ex.parser import TolokaWebParser
 from project.modules.model import UserModel
 
@@ -63,6 +63,7 @@ class TbotStoreModel(models.Model):
             self.link = link
             self.tag = tag
 
+
     @classmethod
     @transaction.atomic
     def append_entry(cls, title_a, title_b, link=None, year=None, poster=None, tag=None):
@@ -71,6 +72,7 @@ class TbotStoreModel(models.Model):
                 poster = TolokaWebParser.parse_poster(link)
 
             new = cls(
+                add_time=timezone.now(),
                 title_a=title_a or "",
                 title_b=title_b or "",
                 year=year or 0,

@@ -14,6 +14,7 @@ logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
                     datefmt="%Y-%m-%d %H:%M:%S")
 logging.info("urls.py START")
 
+
 #   index app page
 def index(val):
     return HttpResponse("Index page for app!")

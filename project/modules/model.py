@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 import logging
 
+
 class UserModel(models.Model):
     user_id = models.CharField(max_length=32, unique=True)
     up_date = models.DateTimeField(auto_now_add=True)
