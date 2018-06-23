@@ -5,9 +5,10 @@ from ..models import TbotChatModel
 from ..models import TbotStoreModel
 from project.modules.tbot import TBot
 
+
 class TolokaTBot(TBot):
     scheduler_thread = None
-    interval = 30
+    interval = None
     master_user = None
 
     def __init__(self, token):
@@ -98,6 +99,7 @@ class TolokaTBot(TBot):
             except Exception:
                 logging.exception("Scheduler error:")
 
+            logging.debug("toloka sched sleep for {}".format(60 * self.interval))
             time.sleep(60 * self.interval)
 
     #   Dispatch bot commands
