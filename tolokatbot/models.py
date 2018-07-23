@@ -5,8 +5,12 @@ from django.utils import timezone
 from .ex.parser import TolokaWebParser
 from project.modules.model import UserModel
 
+
 class TbotChatModel(UserModel):
     tag_mask = models.IntegerField(default=-1)
+
+    def __str__(self):
+        return "user: {}".format(self.user_id)
 
     @classmethod
     def get_tag_mask(cls, user_id):

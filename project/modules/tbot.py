@@ -43,6 +43,11 @@ class TBot(object):
         self.bot = telegram.Bot(token=token)
 
     def send_message(self, resp):
+        """
+        Send message
+        :param resp:
+        :return:
+        """
         return self.bot.send_message(
             chat_id=resp.uid,
             text=resp.text,
@@ -52,6 +57,11 @@ class TBot(object):
         )
 
     def send_photo(self, resp):
+        """
+        Send photo
+        :param resp:
+        :return:
+        """
         return self.bot.send_photo(
             chat_id=resp.uid,
             photo=resp.photo,
@@ -118,7 +128,15 @@ class TBot(object):
 
     #   Dispatch webhook url to telegram server
     def set_webhook_url(self, url, cert_file_path=""):
+        """
+        Set web hook url
+        :param url:
+        :param cert_file_path:
+        :return:
+        """
         try:
+            if not cert_file_path:
+                raise FileNotFoundError
             with open(cert_file_path, "rb") as cert_file:
                 self.bot.setWebhook(url, cert_file)
                 logging.debug("Cert is send")
@@ -127,4 +145,8 @@ class TBot(object):
 
     #   Remove binded webhook
     def delete_webhook_url(self):
+        """
+        Remove web hook
+        :return:
+        """
         self.bot.deleteWebhook()
