@@ -4,7 +4,7 @@ from .models import TbotStoreModel
 
 
 class ChatAdmin(admin.ModelAdmin):
-    list_display = ("chat_id", "notif_date")
+    list_display = ("user_id", "up_date")
 
 
 class StoreAdmin(admin.ModelAdmin):

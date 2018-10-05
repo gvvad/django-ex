@@ -4,6 +4,10 @@ from django.http import HttpResponse
 from django.urls import path
 import logging
 import os
+import random
+import string
+from project.modules.scheduler import Scheduler
+from project.modules.tbot import InvalidToken
 
 from .ex.tbot import TolokaTBot
 
@@ -11,21 +15,35 @@ logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO)
 logging.info("tbot views START")
 
 #   path to app
-secret_path = os.getenv("TOLOKA_TBOT_PATH") or "f90a8802866541d489d1db5d78e90782"
+secret_path = os.getenv("TOLOKA_TBOT_PATH") or "".join(random.choices(string.ascii_lowercase + string.digits, k=32))
 secret_path += "/"
+
 #   server url for telegram webhook
 host_url = os.getenv("HOST_URL") or "https://0.0.0.0:8443/"
-tbot_token = os.getenv("TOLOKA_TBOT_TOKEN") or "000-xxx"
+tbot = None
+sch = None
 try:
-    pass
-    tbot = TolokaTBot(tbot_token)
-    tbot.set_webhook_url(host_url + secret_path, str(os.getenv("CERT_FILE_PATH")))
-except Exception:
-    logging.exception("Toloka tbot initialize")
+    tbot = TolokaTBot(token=os.getenv("TOLOKA_TBOT_TOKEN") or None,
+                      master_user=os.getenv("TOLOKA_TBOT_MASTER") or None)
+
+    tbot.set_webhook_url(host_url + secret_path, str(os.getenv("CERT_FILE_PATH")), attempt=3)
+
+    sch = Scheduler(tbot.handle_update,
+                    60*int(os.getenv("TOLOKA_TBOT_INTERVAL") or 30),
+                    start=True,
+                    is_daemon=True)
+except InvalidToken:
+    logging.info("TOLOKA_TBOT_TOKEN invalid")
+except Exception as e:
+    logging.exception("Toloka tbot initialize", e)
 
 
-#   app request handler
 def index(request):
+    """
+    App request handler
+    :param request: Request object
+    :return: Http response object
+    """
     tbot.handle_request(request)
     return HttpResponse("")
 

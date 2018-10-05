@@ -7,6 +7,22 @@ class RustorkaWebParser(WebParser):
     HOST = "http://rustorka.com/forum"
 
     @classmethod
+    def parse_poster(cls, url):
+        """
+        Parse post picture
+        :param url: page url
+        :return: poster pic url
+        """
+        try:
+            content = cls.sync_request(url)
+            return cls.link_from_xnode(
+                html.fromstring(content).xpath("(//table[@id='topic_main']//td[contains(@class,'message')])[1]"
+                                               "//div[@class='post_wrap']//img")[0],
+                is_https=True)
+        except IndexError:
+            return None
+
+    @classmethod
     def get_hot(cls):
         try:
             content = cls.sync_request("/viewforum.php?f=1840")

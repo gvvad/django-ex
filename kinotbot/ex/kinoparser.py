@@ -1,5 +1,4 @@
 import logging
-#import re
 from lxml import html
 from project.modules.webparser import WebParser
 

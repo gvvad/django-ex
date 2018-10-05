@@ -16,11 +16,11 @@ class TolokaWebParser(WebParser):
                      year=0,
                      link="",
                      tag=0x0):
-            self.title_a=title_a
-            self.title_b=title_b
-            self.link=link
-            self.year=year
-            self.tag=tag
+            self.title_a = title_a
+            self.title_b = title_b
+            self.link = link
+            self.year = year
+            self.tag = tag
 
     @classmethod
     def parse_poster(cls, url):

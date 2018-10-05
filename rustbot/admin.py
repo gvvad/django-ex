@@ -4,7 +4,7 @@ from .models import RusTbotStore
 
 
 class ChatAdmin(admin.ModelAdmin):
-    list_display = ("chat_id", )
+    list_display = ("user_id", )
 
 
 class StoreAdmin(admin.ModelAdmin):

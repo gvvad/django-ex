@@ -1,4 +1,5 @@
 osdb
+set_vars.bat
 # Editors
 .idea/
 .vscode/

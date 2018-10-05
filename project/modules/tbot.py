@@ -1,23 +1,21 @@
-import telegram
+# import telegram
 import json
 import logging
+import re
+import io
+import time
+from telegram import *
+from telegram.error import *
+from .webparser import WebParser
 
 
-class TBot(object):
-    token = ""
-    EInvalidToken = telegram.error.InvalidToken
-
-    class InlineKeyboardButton(telegram.InlineKeyboardButton):
-        def __init__(self, *args, **kwargs):
-            super(TBot.InlineKeyboardButton, self).__init__(*args, **kwargs)
+class TBot:
+    token = None
+    bot = None
 
     class MessageResponse:
-        def __init__(self, text, uid=None, buttons=None, inline_buttons=None, parse_mode=telegram.ParseMode.HTML, no_notif=False):
-            self.reply_markup = None
-            if buttons:
-                self.reply_markup = telegram.ReplyKeyboardMarkup(buttons)
-            elif inline_buttons:
-                self.reply_markup = telegram.InlineKeyboardMarkup(inline_buttons)
+        def __init__(self, text, uid=None, reply_markup: [ReplyKeyboardMarkup, InlineKeyboardMarkup, None]=None, parse_mode=ParseMode.HTML, no_notif=False):
+            self.reply_markup = reply_markup
             self.uid = uid
             self.text = text
             self.no_notif = no_notif
@@ -31,21 +29,50 @@ class TBot(object):
             self.alert = alert
 
     class PhotoResponse:
-        def __init__(self, caption, photo, uid=None, buttons=None, parse_mode=telegram.ParseMode.HTML, no_notif=False):
+        def __init__(self, caption, photo, uid=None, reply_markup: [ReplyKeyboardMarkup, InlineKeyboardMarkup, None]=None, parse_mode=ParseMode.HTML, no_notif=False):
             self.uid = uid
+            self.reply_markup = reply_markup
             self.caption = caption
             self.photo = photo
             self.no_notif = no_notif
             self.parse_mode = parse_mode
 
-    def __init__(self, token):
-        self.token = token
-        self.bot = telegram.Bot(token=token)
+        def is_photo_url(self):
+            return isinstance(self.photo, str) and re.search("^https?:", self.photo)
 
-    def send_message(self, resp):
+    def __init__(self, token):
+        if not token:
+            raise InvalidToken
+        self.token = token
+        self.bot = Bot(token=token)
+
+    def send(self,
+             resp: [CallbackResponse, PhotoResponse, MessageResponse],
+             uid: [int, None]=None,
+             cid: [int, None]=None
+             ) -> [Message, bool]:
+        """
+        Send message to user|chat
+        :param resp: Response object
+        :param uid: Default uid
+        :param cid: Default cid
+        """
+        if isinstance(resp, self.MessageResponse):
+            resp.uid = resp.uid or uid
+            return self.send_message(resp)
+        elif isinstance(resp, self.PhotoResponse):
+            resp.uid = resp.uid or uid
+            return self.send_photo(resp)
+        elif isinstance(resp, self.CallbackResponse):
+            resp.cid = resp.cid or cid
+            return self.answer_callback_query(resp)
+
+        return False
+
+    def send_message(self, resp) -> Message:
         """
         Send message
-        :param resp:
+        :param resp: MessageResponse
         :return:
         """
         return self.bot.send_message(
@@ -56,21 +83,41 @@ class TBot(object):
             disable_notification=resp.no_notif
         )
 
-    def send_photo(self, resp):
+    def send_photo(self, resp: PhotoResponse) -> Message:
         """
         Send photo
+        :param resp: PhotoResponse
+        :return:
+        """
+        try:
+            return self.bot.send_photo(
+                chat_id=resp.uid,
+                photo=resp.photo,
+                caption=resp.caption,
+                parse_mode=resp.parse_mode,
+                disable_notification=resp.no_notif
+            )
+        except BadRequest as e:
+            if resp.is_photo_url():
+                content = WebParser.sync_request(resp.photo)
+                if not content:
+                    raise e
+                with io.BytesIO(content) as file:
+                    return self.bot.send_photo(
+                        chat_id=resp.uid,
+                        photo=file,
+                        caption=resp.caption,
+                        parse_mode=resp.parse_mode,
+                        disable_notification=resp.no_notif)
+            else:
+                raise e
+
+    def answer_callback_query(self, resp) -> bool:
+        """
+        Answer to callback
         :param resp:
         :return:
         """
-        return self.bot.send_photo(
-            chat_id=resp.uid,
-            photo=resp.photo,
-            caption=resp.caption,
-            parse_mode=resp.parse_mode,
-            disable_notification=resp.no_notif
-        )
-
-    def answer_callback_query(self, resp):
         return self.bot.answer_callback_query(
             callback_query_id=resp.cid,
             text=resp.text,
@@ -97,56 +144,54 @@ class TBot(object):
                     cid = update["callback_query"]["id"]
                     resp = self._handle_callback(query=update["callback_query"])
 
-                if type(resp) is not list:
+                if not resp:
+                    return
+
+                if not isinstance(resp, list):
                     resp = [resp]
-
                 for item in resp:
-                    try:
-                        item.uid = item.uid or uid
-                    except AttributeError:
-                        pass
-                    try:
-                        item.cid = item.cid or cid
-                    except AttributeError:
-                        pass
-
-                    if type(item) is TBot.MessageResponse:
-                        self.send_message(item)
-                    elif type(item) is TBot.PhotoResponse:
-                        self.send_photo(item)
-                    elif type(item) is TBot.CallbackResponse:
-                        self.answer_callback_query(item)
+                    self.send(item, uid=uid, cid=cid)
 
             except Exception:
                 logging.exception("TBot POST response")
 
-    def _handle_message(self, message):
+    def _handle_message(self, message) -> [CallbackResponse, MessageResponse, PhotoResponse, None]:
         return None
 
-    def _handle_callback(self, query):
+    def _handle_callback(self, query) -> [CallbackResponse, MessageResponse, PhotoResponse, None]:
         return None
 
-    #   Dispatch webhook url to telegram server
-    def set_webhook_url(self, url, cert_file_path=""):
+    def set_webhook_url(self, url, cert_file_path=None, attempt: int=1):
         """
         Set web hook url
-        :param url:
+        :param url: url in url format
         :param cert_file_path:
+        :param attempt: count of attempts
         :return:
         """
-        try:
-            if not cert_file_path:
-                raise FileNotFoundError
-            with open(cert_file_path, "rb") as cert_file:
-                self.bot.setWebhook(url, cert_file)
-                logging.debug("Cert is send")
-        except FileNotFoundError:
-            self.bot.setWebhook(url)
+        while attempt > 0:
+            try:
+                try:
+                    if not cert_file_path:
+                        raise FileNotFoundError
+                    with open(cert_file_path, "rb") as cert_file:
+                        self.bot.setWebhook(url, cert_file)
+                        attempt = -1
+                        logging.debug("Cert is send")
+                except FileNotFoundError:
+                    self.bot.setWebhook(url)
+                    attempt = -1
+            except TimedOut:
+                attempt -= 1
+                logging.info("set webhook time out, attempts left:{}".format(attempt))
+                if attempt > 0:
+                    time.sleep(3)
 
-    #   Remove binded webhook
+        if attempt == 0:
+            raise TimedOut
+
     def delete_webhook_url(self):
         """
         Remove web hook
-        :return:
         """
         self.bot.deleteWebhook()

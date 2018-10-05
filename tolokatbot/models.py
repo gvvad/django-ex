@@ -46,7 +46,7 @@ class TbotChatModel(UserModel):
 
 
 class TbotStoreModel(models.Model):
-    add_time = models.DateTimeField()
+    add_time = models.DateTimeField(auto_now_add=True)
     title_a = models.CharField(max_length=256)
     title_b = models.CharField(max_length=256)
     link = models.CharField(max_length=256)
@@ -65,7 +65,6 @@ class TbotStoreModel(models.Model):
             self.poster = poster
             self.link = link
             self.tag = tag
-
 
     @classmethod
     @transaction.atomic

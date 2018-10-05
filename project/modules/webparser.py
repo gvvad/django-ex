@@ -1,41 +1,51 @@
 import logging
 import re
+from urllib import request
 from urllib.request import Request, urlopen
 from lxml import html
 import html as _html
 
 
-class WebParser(object):
+class WebParser:
     HEADERS = {
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36"
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                      "Chrome/65.0.3325.181 Safari/537.36"
     }
     
     HOST = ""
 
     @classmethod
-    def sync_request(cls, url):
+    def sync_request(cls, url) -> [bytes, None]:
         logging.debug("web parser request")
         r = Request(cls.beatify_url(url), headers=cls.HEADERS)
-        content = urlopen(r).read()
-        logging.debug("web parser request return")
-        return content
+        try:
+            return urlopen(r).read()
+        except request.URLError:
+            return None
 
     @classmethod
-    def beatify_url(cls, url):
+    def beatify_url(cls, url, is_https=False):
         if url[0] == '.':
             url = url[1:]
 
+        res = ""
+
         if re.search("^http", url):
-            return url
+            res = url
         elif re.search("^//", url):
-            return "http:"+url if re.search("^http:", cls.HOST) else "https:"+url
+            res = "http:"+url if re.search("^http:", cls.HOST) else "https:"+url
         elif re.search("^/", url):
-            return cls.HOST+url
+            res = cls.HOST+url
         else:
-            return cls.HOST+"/"+url
+            res = cls.HOST+"/"+url
+
+        if is_https:
+            res = re.sub("^http:", "https:", res)
+        return res
 
     @classmethod
-    def link_from_xnode(cls, node):
+    def link_from_xnode(cls, node, is_https=False):
         if "href" in node.attrib:
             link = node.attrib["href"]
         elif "src" in node.attrib:
@@ -43,7 +53,7 @@ class WebParser(object):
         else:
             return None
 
-        return cls.beatify_url(link)
+        return cls.beatify_url(link, is_https=is_https)
 
     @staticmethod
     def text_from_xnode(node):

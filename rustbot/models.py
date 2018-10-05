@@ -1,29 +1,24 @@
 from django.db import models
 from .ex.tbparser import RustorkaWebParser
+from project.modules.model import UserModel
 
 
-class RusTbotChat(models.Model):
-    chat_id = models.CharField(max_length=32, unique=True)
+class RusTbotChat(UserModel):
     tag_mask = models.IntegerField(default=-1)
 
-
-    @staticmethod
-    def is_chat_id(_id):
-        return bool(RusTbotChat.objects.filter(chat_id=_id))
-
-    @staticmethod
-    def get_tag_mask(user_id):
-        r = RusTbotChat.objects.filter(user_id=user_id)
+    @classmethod
+    def get_tag_mask(cls, user_id):
+        r = cls.objects.filter(user_id=user_id)
         if r:
             return r.tag_mask
         return None
 
-    @staticmethod
-    def update_chat_id(chat_id, tag_mask=-1):
-        r = RusTbotChat.objects.filter(chat_id=chat_id)
+    @classmethod
+    def update_user_id(cls, user_id, tag_mask=-1):
+        r = cls.objects.filter(user_id=user_id)
         if not r:
-            RusTbotChat(
-                chat_id=chat_id,
+            cls(
+                user_id=user_id,
                 tag_mask=tag_mask
             ).save()
             return True
@@ -34,14 +29,6 @@ class RusTbotChat(models.Model):
                 return True
             return False
 
-    @staticmethod
-    def remove_chat_id(_id):
-        RusTbotChat.objects.filter(chat_id=_id).delete()
-
-    @staticmethod
-    def chat_list():
-        for item in RusTbotChat.objects.all():
-            yield item
 
 class RusTbotStore(models.Model):
     up_time = models.DateTimeField(auto_now=True)
@@ -49,24 +36,31 @@ class RusTbotStore(models.Model):
     link = models.CharField(max_length=256)
     author = models.CharField(max_length=256)
     tag = models.IntegerField(default=-1)
+    poster = models.TextField(max_length=256, default="")
 
     class Container:
-        def __init__(self, title="", link="", author="", tag=-1):
+        def __init__(self, title="", link="", author="", tag=-1, poster=""):
             self.title = title
             self.link = link
             self.author = author
             self.tag = tag
+            self.poster = poster
 
+    @classmethod
+    def is_entry_exist(cls, _link) -> bool:
+        r = cls.objects.filter(link=_link)
+        return bool(r)
 
-    @staticmethod
-    def store_entry(_title, _link, _author, _tag=None):
-        r = RusTbotStore.objects.filter(link=_link)
+    @classmethod
+    def store_entry(cls, _title, _link, _author, _tag=None, poster=""):
+        r = cls.objects.filter(link=_link)
         if not r:
-            RusTbotStore(
+            cls(
                 title=_title,
                 link=_link,
                 author=_author,
-                tag=_tag
+                tag=_tag,
+                poster=poster
             ).save()
             return True
         else:
@@ -76,16 +70,19 @@ class RusTbotStore(models.Model):
                 return True
             return False
 
-    @staticmethod
-    def _store_entries(items, tag=-1):
+    @classmethod
+    def _store_entries(cls, items, tag=-1):
         delta = []
         for item in items:
-            if RusTbotStore.store_entry(item["title"], item["link"], item["author"], _tag=tag):
-                delta.append(RusTbotStore.Container(title=item["title"],
-                                                    link=item["link"],
-                                                    author=item["author"],
-                                                    tag=tag
-                                                    ))
+            if not cls.is_entry_exist(item["link"]):
+                item["poster"] = RustorkaWebParser.parse_poster(item["link"]) or ""
+
+                if cls.store_entry(item["title"], item["link"], item["author"], _tag=tag, poster=item["poster"]):
+                    delta.append(RusTbotStore.Container(title=item["title"],
+                                                        link=item["link"],
+                                                        author=item["author"],
+                                                        tag=tag,
+                                                        poster=item["poster"]))
         return delta
 
     @staticmethod

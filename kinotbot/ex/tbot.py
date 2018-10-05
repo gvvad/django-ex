@@ -3,7 +3,7 @@ import logging
 
 from ..models import TbotChatModel
 from ..models import TbotStoreModel
-from project.modules.tbot import TBot
+from project.modules.tbot import TBot, InlineKeyboardMarkup, InlineKeyboardButton, BadRequest
 
 
 class KinoTBot(TBot):
@@ -11,21 +11,9 @@ class KinoTBot(TBot):
     interval = 30
     master_user = None
 
-    def __init__(self, token):
+    def __init__(self, token, master_user=None):
         super(KinoTBot, self).__init__(token)
-
-        try:
-            self.interval = int(os.getenv("KINO_TBOT_INTERVAL"))
-        except Exception:
-            self.interval = 30
-
-        try:
-            self.master_user = os.getenv("KINO_TBOT_MASTER")
-        except Exception:
-            pass
-
-        self.scheduler_thread = threading.Thread(target=self._scheduler, daemon=True)
-        self.scheduler_thread.start()
+        self.master_user = master_user
 
     #   Virtual method replace
     def _handle_message(self, message):
@@ -58,50 +46,42 @@ class KinoTBot(TBot):
                     self._dispatch_cmd_help(user_id),
                     ]
 
-    #   background daemon worker
-    def _scheduler(self):
-        logging.info("Start scheduler")
-        while True:
-            try:
-                logging.debug("Sheduler call update")
-                delta = TbotStoreModel.update()
+    def handle_update(self):
+        try:
+            logging.debug("Sheduler call update")
+            delta = TbotStoreModel.update()
 
-                if delta:
-                    for chat in TbotChatModel.chat_list():
-                        try:
-                            for post in TbotStoreModel.get_not_earlier(chat.notif_date):
-                                text = "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>". \
-                                    format(post.link,
-                                           post.title_ru,
-                                           post.title_en,
-                                           post.year,
-                                           "HD" if bool(post.tag & 1) else "SD")
-                                self.send_photo(self.PhotoResponse(caption=text,
-                                                                   photo=post.poster,
-                                                                   uid=chat.chat_id))
+            if delta:
+                for user in TbotChatModel.user_list():
+                    try:
+                        for post in delta:
+                            try:
+                                resp = self.send(self.PhotoResponse(caption=self.get_post_text(post),
+                                                                    photo=post.poster,
+                                                                    uid=user.user_id))
+                                post.poster = resp.photo[-1].file_id
+                            except BadRequest:
+                                self.send(self.MessageResponse(text=self.get_post_text(post),
+                                                               uid=user.user_id))
 
-                        except Exception:
-                            logging.exception("schedule notif")
-                            pass
-                        TbotChatModel.notif_user(chat.chat_id)
+                    except Exception as e:
+                        logging.exception("schedule notif", e)
+                    TbotChatModel.set_up_date(user.user_id)
 
-                    TbotStoreModel.remove_last()
-            except Exception:
-                logging.exception("Scheduler error:")
-
-            time.sleep(60 * self.interval)
+                TbotStoreModel.remove_last()
+        except Exception as e:
+            logging.exception("Scheduler error:", e)
 
     #   Dispatch bot commands
     def _dispatch_cmd_help(self, chat_id):
-        is_subscribed = TbotChatModel.is_chat_id(chat_id)
-        res = super().MessageResponse(text="Вы подписаны!\n" if is_subscribed else "Вы не подписаны.\n",
-                                      inline_buttons=[[
-                                          super().InlineKeyboardButton(text="Отписаться",
-                                                                       callback_data="stop") if is_subscribed else
-                                          super().InlineKeyboardButton(text="Подписаться",
-                                                                       callback_data="start")
-                                      ]])
-        res.no_notif = True
+        is_subscribed = TbotChatModel.is_user(chat_id)
+        res = self.MessageResponse(text="Вы подписаны!\n" if is_subscribed else "Вы не подписаны.\n",
+                                   reply_markup=InlineKeyboardMarkup(
+                                       [[InlineKeyboardButton(text="Отписаться", callback_data="stop")]]
+                                       if is_subscribed else
+                                       [[InlineKeyboardButton(text="Подписаться", callback_data="start")]]),
+                                   no_notif=True
+                                   )
         res.text += "/start - Подписаться на рассылку\n" \
                     "/stop - Отписаться\n" \
                     "/re {message} - Написать отзыв\n" \
@@ -126,20 +106,22 @@ class KinoTBot(TBot):
 
     def _dispatch_cmd_stop(self, chat_id):
         try:
-            TbotChatModel.remove_chat_id(chat_id)
+            TbotChatModel.remove_user(chat_id)
         except Exception:
             logging.exception("Error cmd stop")
 
     def _dispatch_cmd_unknown(self):
         return super().MessageResponse(text="I dont understand you")
-
-    @staticmethod
-    def render_data(data):
-        return "\n".join(
-            ["<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>".format(
-                item.link,
-                item.title_ru,
-                item.title_en,
-                item.year,
-                "HD" if bool(item.tag & 1) else "SD"
-            ) for item in data])
+    
+    @classmethod
+    def get_post_text(cls, post):
+        return "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>".format(
+                post.link,
+                post.title_ru,
+                post.title_en,
+                post.year,
+                "HD" if bool(post.tag & 1) else "SD")
+    
+    @classmethod
+    def render_data(cls, data):
+        return "\n".join([cls.get_post_text(item) for item in data])
