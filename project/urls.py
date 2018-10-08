@@ -3,16 +3,13 @@ from django.conf.urls import include, url
 from django.urls import path
 from django.contrib import admin
 from django.http import HttpResponse
-import logging
+# import logging
 
 from rustbot.views import add_path as rustbot_add_path
 from kinotbot.views import add_path as kinotbot_add_path
 from tolokatbot.views import add_path as toloka_add_path
 
-logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO,
-                    format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
-                    datefmt="%Y-%m-%d %H:%M:%S")
-logging.info("urls.py START")
+# logging.debug("urls.py START")
 
 
 #   index app page
@@ -30,4 +27,4 @@ if settings.DEBUG:
         url(r'^__debug__/', include(debug_toolbar.urls)),
     ] + urlpatterns
 
-logging.info("urls.py END")
+# logging.debug("urls.py END")

@@ -11,7 +11,6 @@ from project.modules.tbot import InvalidToken
 
 from .ex.tbot import TolokaTBot
 
-logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO)
 logging.info("tbot views START")
 
 #   path to app

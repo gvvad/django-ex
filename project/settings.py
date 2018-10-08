@@ -11,6 +11,14 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import logging
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = bool(os.getenv("DJANGO_DEBUG") == "1")
+
+logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO,
+                    format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
+                    datefmt="%Y-%m-%d %H:%M:%S")
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -26,9 +34,6 @@ SECRET_KEY = os.getenv(
     # safe value used for development when DJANGO_SECRET_KEY might not be set
     '9e4@&tw46$l31)zrqe3wi+-slqm(ruvz&se0^%9#6(_w3ui!c0'
 )
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.getenv("DJANGO_DEBUG") else False
 
 ALLOWED_HOSTS = ['*']
 

@@ -11,7 +11,6 @@ from .ex.tbot import KinoTBot
 from project.modules.scheduler import Scheduler
 from project.modules.tbot import InvalidToken
 
-logging.basicConfig(level=logging.DEBUG if settings.DEBUG else logging.INFO)
 logging.info("tbot views START")
 
 #   path to app
