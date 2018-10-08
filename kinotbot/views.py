@@ -21,4 +21,3 @@ def index(request):
 
 #   list of path`s
 add_path = [path(app.secret_path, index)]
-logging.info("kinotbot views END")
