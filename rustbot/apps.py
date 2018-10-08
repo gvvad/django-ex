@@ -33,4 +33,4 @@ class RustbotConfig(AppConfig):
         except InvalidToken:
             logging.info("RUS_TBOT_TOKEN invalid")
         except Exception as e:
-            logging.exception("Rus tbot initialize", e)
+            logging.exception("Rus tbot initialize")

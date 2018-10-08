@@ -33,4 +33,4 @@ class TolokatbotConfig(AppConfig):
         except InvalidToken:
             logging.info("TOLOKA_TBOT_TOKEN invalid")
         except Exception as e:
-            logging.exception("Toloka tbot initialize", e)
+            logging.exception("Toloka tbot initialize")

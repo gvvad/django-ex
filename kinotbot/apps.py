@@ -34,4 +34,4 @@ class KinotbotConfig(AppConfig):
         except InvalidToken:
             logging.info("KINO_TBOT_TOKEN invalid")
         except Exception as e:
-            logging.exception("Kino tbot initialize", e)
+            logging.exception("Kino tbot initialize")
