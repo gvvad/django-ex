@@ -26,7 +26,7 @@ class KinotbotConfig(AppConfig):
                                  master_user=os.getenv("KINO_TBOT_MASTER") or None)
 
             self.tbot.set_webhook_url(self.host_url + self.secret_path, str(os.getenv("CERT_FILE_PATH")), attempt=3)
-
+            logging.info("kinotbot sets webhook")
             self.scheduler = Scheduler(handler=self.tbot.handle_update,
                                        sleep_time=60 * int(os.getenv("KINO_TBOT_INTERVAL") or 30),
                                        start=True,

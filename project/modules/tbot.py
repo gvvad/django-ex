@@ -200,7 +200,7 @@ class TBot:
                     return self.bot.setWebhook(url)
             except RetryAfter as e:
                 time.sleep(round(e.retry_after))
-            except TimedOut:
+            except (TimedOut, NetworkError):
                 attempt -= 1
                 logging.info("set webhook time out, attempts left:{}".format(attempt))
                 if attempt > 0:
