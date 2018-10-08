@@ -1,4 +1,4 @@
-from django.conf import settings
+# from django.conf import settings
 #from django.shortcuts import render
 from django.http import HttpResponse
 from django.urls import path
@@ -40,6 +40,7 @@ def index(request):
     :param request:
     :return:
     """
+    logging.debug(str(request.body))
     tbot.handle_request(request)
     return HttpResponse("")
 

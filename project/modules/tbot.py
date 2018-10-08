@@ -7,6 +7,7 @@ import time
 from telegram import *
 from telegram.error import *
 from .webparser import WebParser
+from threading import Thread, Event
 
 
 class TBot:
@@ -69,63 +70,81 @@ class TBot:
 
         return False
 
-    def send_message(self, resp) -> Message:
+    def send_message(self, resp, attempt=3) -> Message:
         """
         Send message
         :param resp: MessageResponse
         :return:
         """
-        return self.bot.send_message(
-            chat_id=resp.uid,
-            text=resp.text,
-            parse_mode=resp.parse_mode,
-            reply_markup=resp.reply_markup,
-            disable_notification=resp.no_notif
-        )
+        while attempt > 0:
+            try:
+                return self.bot.send_message(
+                    chat_id=resp.uid,
+                    text=resp.text,
+                    parse_mode=resp.parse_mode,
+                    reply_markup=resp.reply_markup,
+                    disable_notification=resp.no_notif
+                )
+            except TimedOut:
+                attempt -= 1
 
-    def send_photo(self, resp: PhotoResponse) -> Message:
+        raise TimedOut()
+
+    def send_photo(self, resp: PhotoResponse, attempt=3) -> Message:
         """
         Send photo
         :param resp: PhotoResponse
         :return:
         """
-        try:
-            return self.bot.send_photo(
-                chat_id=resp.uid,
-                photo=resp.photo,
-                caption=resp.caption,
-                parse_mode=resp.parse_mode,
-                disable_notification=resp.no_notif
-            )
-        except BadRequest as e:
-            if resp.is_photo_url():
-                content = WebParser.sync_request(resp.photo)
-                if not content:
+        while attempt > 0:
+            try:
+                return self.bot.send_photo(
+                    chat_id=resp.uid,
+                    photo=resp.photo,
+                    caption=resp.caption,
+                    parse_mode=resp.parse_mode,
+                    disable_notification=resp.no_notif)
+            except TimedOut:
+                attempt -= 1
+            except BadRequest as e:
+                if resp.is_photo_url():
+                    content = WebParser.sync_request(resp.photo)
+                    if not content:
+                        raise e
+                    with io.BytesIO(content) as file:
+                        return self.bot.send_photo(
+                            chat_id=resp.uid,
+                            photo=file,
+                            caption=resp.caption,
+                            parse_mode=resp.parse_mode,
+                            disable_notification=resp.no_notif)
+                else:
                     raise e
-                with io.BytesIO(content) as file:
-                    return self.bot.send_photo(
-                        chat_id=resp.uid,
-                        photo=file,
-                        caption=resp.caption,
-                        parse_mode=resp.parse_mode,
-                        disable_notification=resp.no_notif)
-            else:
-                raise e
 
-    def answer_callback_query(self, resp) -> bool:
+        raise TimedOut()
+
+    def answer_callback_query(self, resp, attempt=3) -> bool:
         """
         Answer to callback
         :param resp:
         :return:
         """
-        return self.bot.answer_callback_query(
-            callback_query_id=resp.cid,
-            text=resp.text,
-            show_alert=resp.alert,
-            url=resp.url
-        )
+        while attempt > 0:
+            try:
+                return self.bot.answer_callback_query(
+                    callback_query_id=resp.cid,
+                    text=resp.text,
+                    show_alert=resp.alert,
+                    url=resp.url)
+            except TimedOut:
+                attempt -= 1
 
-    def handle_request(self, request):
+        raise TimedOut()
+
+    def _handle_request(self, request):
+        """
+        Helper for handle_request
+        """
         if request.method == "GET":
             return
         elif request.method == "POST":
@@ -152,8 +171,19 @@ class TBot:
                 for item in resp:
                     self.send(item, uid=uid, cid=cid)
 
-            except Exception:
-                logging.exception("TBot POST response")
+            except Exception as e:
+                logging.exception("TBot POST response", e)
+
+    def handle_request(self, request, is_async=True):
+        """
+        Handle http request
+        :param request: http request
+        :param is_async: run in thread
+        """
+        if is_async:
+            Thread(target=self._handle_request, args=(request,)).start()
+        else:
+            self._handle_request(request)
 
     def _handle_message(self, message) -> [CallbackResponse, MessageResponse, PhotoResponse, None]:
         return None
@@ -175,20 +205,16 @@ class TBot:
                     if not cert_file_path:
                         raise FileNotFoundError
                     with open(cert_file_path, "rb") as cert_file:
-                        self.bot.setWebhook(url, cert_file)
-                        attempt = -1
-                        logging.debug("Cert is send")
+                        return self.bot.setWebhook(url, cert_file)
                 except FileNotFoundError:
-                    self.bot.setWebhook(url)
-                    attempt = -1
+                    return self.bot.setWebhook(url)
             except TimedOut:
                 attempt -= 1
                 logging.info("set webhook time out, attempts left:{}".format(attempt))
                 if attempt > 0:
                     time.sleep(3)
 
-        if attempt == 0:
-            raise TimedOut
+        raise TimedOut()
 
     def delete_webhook_url(self):
         """
