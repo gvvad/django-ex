@@ -198,11 +198,13 @@ class TBot:
                         return self.bot.setWebhook(url, cert_file)
                 except FileNotFoundError:
                     return self.bot.setWebhook(url)
+            except RetryAfter as e:
+                time.sleep(round(e.retry_after))
             except TimedOut:
                 attempt -= 1
                 logging.info("set webhook time out, attempts left:{}".format(attempt))
                 if attempt > 0:
-                    time.sleep(3)
+                    time.sleep(5)
 
         raise TimedOut()
 
