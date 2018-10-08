@@ -1,8 +1,9 @@
 from django.contrib import admin
 from .models import TbotChatModel
 from .models import TbotStoreModel
+from django.apps import apps
 #import logging
-from .views import tbot
+app = apps.get_app_config("tolokatbot")
 
 
 class ChatAdmin(admin.ModelAdmin):
@@ -13,7 +14,7 @@ def cus_action(self, request, queryset):
     posts = list(queryset)
     for user in TbotChatModel.objects.all():
         for post in posts:
-            tbot.send_post(user.user_id, post)
+            app.tbot.send_post(user.user_id, post)
 
 
 cus_action.short_description = "Delivery to users"

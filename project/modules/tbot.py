@@ -50,7 +50,8 @@ class TBot:
     def send(self,
              resp: [CallbackResponse, PhotoResponse, MessageResponse],
              uid: [int, None]=None,
-             cid: [int, None]=None
+             cid: [int, None]=None,
+             attempt=3
              ) -> [Message, bool]:
         """
         Send message to user|chat
@@ -58,88 +59,77 @@ class TBot:
         :param uid: Default uid
         :param cid: Default cid
         """
-        if isinstance(resp, self.MessageResponse):
-            resp.uid = resp.uid or uid
-            return self.send_message(resp)
-        elif isinstance(resp, self.PhotoResponse):
-            resp.uid = resp.uid or uid
-            return self.send_photo(resp)
-        elif isinstance(resp, self.CallbackResponse):
-            resp.cid = resp.cid or cid
-            return self.answer_callback_query(resp)
+        while attempt > 0:
+            try:
+                if isinstance(resp, self.MessageResponse):
+                    resp.uid = resp.uid or uid
+                    return self.send_message(resp)
+                elif isinstance(resp, self.PhotoResponse):
+                    resp.uid = resp.uid or uid
+                    return self.send_photo(resp)
+                elif isinstance(resp, self.CallbackResponse):
+                    resp.cid = resp.cid or cid
+                    return self.answer_callback_query(resp)
+            except TimedOut as e:
+                attempt -= 1
+                if attempt == 0:
+                    raise e
 
         return False
 
-    def send_message(self, resp, attempt=3) -> Message:
+    def send_message(self, resp: MessageResponse) -> Message:
         """
         Send message
         :param resp: MessageResponse
         :return:
         """
-        while attempt > 0:
-            try:
-                return self.bot.send_message(
-                    chat_id=resp.uid,
-                    text=resp.text,
-                    parse_mode=resp.parse_mode,
-                    reply_markup=resp.reply_markup,
-                    disable_notification=resp.no_notif
-                )
-            except TimedOut:
-                attempt -= 1
+        return self.bot.send_message(
+            chat_id=resp.uid,
+            text=resp.text,
+            parse_mode=resp.parse_mode,
+            reply_markup=resp.reply_markup,
+            disable_notification=resp.no_notif
+        )
 
-        raise TimedOut()
-
-    def send_photo(self, resp: PhotoResponse, attempt=3) -> Message:
+    def send_photo(self, resp: PhotoResponse) -> Message:
         """
         Send photo
         :param resp: PhotoResponse
         :return:
         """
-        while attempt > 0:
-            try:
-                return self.bot.send_photo(
-                    chat_id=resp.uid,
-                    photo=resp.photo,
-                    caption=resp.caption,
-                    parse_mode=resp.parse_mode,
-                    disable_notification=resp.no_notif)
-            except TimedOut:
-                attempt -= 1
-            except BadRequest as e:
-                if resp.is_photo_url():
-                    content = WebParser.sync_request(resp.photo)
-                    if not content:
-                        raise e
-                    with io.BytesIO(content) as file:
-                        return self.bot.send_photo(
-                            chat_id=resp.uid,
-                            photo=file,
-                            caption=resp.caption,
-                            parse_mode=resp.parse_mode,
-                            disable_notification=resp.no_notif)
-                else:
+        try:
+            return self.bot.send_photo(
+                chat_id=resp.uid,
+                photo=resp.photo,
+                caption=resp.caption,
+                parse_mode=resp.parse_mode,
+                disable_notification=resp.no_notif)
+        except BadRequest as e:
+            if resp.is_photo_url():
+                content = WebParser.sync_request(resp.photo)
+                if not content:
                     raise e
+                with io.BytesIO(content) as file:
+                    return self.bot.send_photo(
+                        chat_id=resp.uid,
+                        photo=file,
+                        caption=resp.caption,
+                        parse_mode=resp.parse_mode,
+                        disable_notification=resp.no_notif)
+            else:
+                raise e
 
-        raise TimedOut()
-
-    def answer_callback_query(self, resp, attempt=3) -> bool:
+    def answer_callback_query(self, resp: CallbackResponse) -> bool:
         """
         Answer to callback
         :param resp:
         :return:
         """
-        while attempt > 0:
-            try:
-                return self.bot.answer_callback_query(
-                    callback_query_id=resp.cid,
-                    text=resp.text,
-                    show_alert=resp.alert,
-                    url=resp.url)
-            except TimedOut:
-                attempt -= 1
-
-        raise TimedOut()
+        return self.bot.answer_callback_query(
+            callback_query_id=resp.cid,
+            text=resp.text,
+            show_alert=resp.alert,
+            url=resp.url)
 
     def _handle_request(self, request):
         """
