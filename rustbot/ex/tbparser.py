@@ -1,6 +1,7 @@
 import logging
 from lxml import html
 from project.modules.webparser import WebParser
+import datetime
 
 
 class RustorkaWebParser(WebParser):
@@ -34,11 +35,19 @@ class RustorkaWebParser(WebParser):
                     _title = cls.text_from_xnode(tr.xpath(".//a[@class='topictitle']")[0])
                     _link = cls.link_from_xnode(tr.xpath(".//a[@class='topictitle']")[0])
                     _author = cls.text_from_xnode(tr.xpath("./td/p/a")[0])
+                    _s_date = cls.text_from_xnode(tr.xpath("./td/p")[0]).split(" ")[0]
+
+                    # Skip posts earlier then 60 days
+                    try:
+                        if not (datetime.datetime.strptime(_s_date, "%Y-%m-%d") + datetime.timedelta(60.0))\
+                               > datetime.datetime.now():
+                            continue
+                    except ValueError:
+                        pass
 
                     new_data.append({"title": _title,
                                      "link": _link,
-                                     "author": _author
-                                     })
+                                     "author": _author})
                 except Exception:
                     logging.exception("TBStorage udpate")
 
@@ -64,8 +73,7 @@ class RustorkaWebParser(WebParser):
 
                     new_data.append({"title": _title,
                                      "link": _link,
-                                     "author": _author
-                                     })
+                                     "author": _author})
                 except Exception:
                     logging.exception("TBStorage udpate")
 

@@ -63,7 +63,7 @@ class RusTBot(TBot):
                     except Exception as e:
                         logging.exception("user delivered", e)
 
-                RusTbotStore.remove_last(200)
+                RusTbotStore.remove_last(1000)
         except Exception as e:
             logging.exception("Scheduler error:", e)
 

@@ -1,5 +1,7 @@
-from threading import Thread, Event
 import logging
+from threading import Thread, Event
+import threading
+import os
 
 
 class Scheduler:
@@ -21,11 +23,11 @@ class Scheduler:
         """
         self.handler = handler
         self.sleep_time = sleep_time
-        self.thread = Thread(target=self._worker, daemon=is_daemon)
+        self.thread = Thread(target=self._worker, daemon=is_daemon, name="Some scheduler daemon")
         self.event = Event()
 
         if start:
-            self.start()
+            self.thread.start()
 
     def set_time(self, new_time=None):
         if new_time:
@@ -39,7 +41,7 @@ class Scheduler:
             try:
                 self.handler()
             except Exception:
-                logging.exception("Sheduler")
+                logging.exception("Scheduler")
             if self.event.wait(timeout=self.sleep_time):
                 break
 
