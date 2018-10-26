@@ -71,6 +71,7 @@ class TBot:
                     resp.cid = resp.cid or cid
                     return self.answer_callback_query(resp)
             except TimedOut as e:
+                logging.debug("send Timed Out attempt:{}".format(attempt))
                 attempt -= 1
                 if attempt == 0:
                     raise e
@@ -103,7 +104,8 @@ class TBot:
                 photo=resp.photo,
                 caption=resp.caption,
                 parse_mode=resp.parse_mode,
-                disable_notification=resp.no_notif)
+                disable_notification=resp.no_notif,
+                timeout=50)
         except BadRequest as e:
             if resp.is_photo_url():
                 content = WebParser.sync_request(resp.photo)
@@ -115,7 +117,8 @@ class TBot:
                         photo=file,
                         caption=resp.caption,
                         parse_mode=resp.parse_mode,
-                        disable_notification=resp.no_notif)
+                        disable_notification=resp.no_notif,
+                        timeout=50)
             else:
                 raise e
 

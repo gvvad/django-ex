@@ -119,7 +119,7 @@ class TbotStoreModel(models.Model):
             yield item
 
     @classmethod
-    def remove_last(cls, count=200):
+    def remove_last(cls, count=500):
         tmp = cls.objects.order_by("-add_time").values_list("id", flat=True)[:count]
         cls.objects.exclude(pk__in=list(tmp)).delete()
 
@@ -128,8 +128,9 @@ class TbotStoreModel(models.Model):
         delta = []
         y = datetime.now().year
 
-        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y)))
-        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y - 1)))
-        delta += cls._store_posts(TolokaWebParser.parse_top_hd(str(y - 2)))
+        delta += cls._store_posts(TolokaWebParser.parse_page({"f[]": 96, "nm": y, "tcs": 1}))
+        delta += cls._store_posts(TolokaWebParser.parse_page({"f[]": 96, "nm": y-1, "tcs": 1}))
+        delta += cls._store_posts(TolokaWebParser.parse_page({"f[]": 96, "nm": y-2, "tcs": 1}))
+        delta += cls._store_posts(TolokaWebParser.parse_page({"f[]": 139, "nm": y, "tcs": 1}))
 
         return delta

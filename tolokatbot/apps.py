@@ -38,6 +38,8 @@ class TolokatbotConfig(AppConfig):
             self.tbot.set_webhook_url(self.host_url + self.secret_path, str(os.getenv("CERT_FILE_PATH")), attempt=3)
             logging.info("tolokatbot sets webhook")
             self.s_sleep = 60 * int(os.getenv("TOLOKA_TBOT_INTERVAL") or 30)
+
+            # self.tbot.handle_update()
             # self.scheduler = Scheduler(self.tbot.handle_update,
             #                            60 * int(os.getenv("TOLOKA_TBOT_INTERVAL") or 30),
             #                            start=True,

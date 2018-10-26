@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 from ..models import TbotChatModel
 from ..models import TbotStoreModel
 from project.modules.tbot import TBot, InlineKeyboardMarkup, InlineKeyboardButton, BadRequest
+from .parser import TolokaWebParser
 
 
 class TolokaTBot(TBot):
@@ -152,15 +153,15 @@ class TolokaTBot(TBot):
     @staticmethod
     def get_html_post(post):
         """Return html text for post item"""
-        return "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b> <a href='https://toloka.to/tracker.php?{5}'>Найти</a>".\
+        return "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b> <a href='{5}/tracker.php?{6}'>Найти</a>".\
             format(
                 post.link,
                 post.title_a,
                 post.title_b,
                 post.year,
                 "HD" if bool(post.tag & 1) else "SD",
-                urlencode({"f": "96",
-                           "nm": str(post.title_b) + " " + str(post.year)}))
+                TolokaWebParser.HOST,
+                urlencode({"nm": str(post.title_b or post.title_a) + " " + str(post.year)}))
 
     @classmethod
     def render_data(cls, data):

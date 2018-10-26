@@ -2,6 +2,7 @@ import logging
 import re
 from lxml import html
 from project.modules.webparser import WebParser
+from urllib.parse import urlencode
 
 
 class TolokaWebParser(WebParser):
@@ -33,15 +34,15 @@ class TolokaWebParser(WebParser):
         return None
 
     @classmethod
-    def parse_top_hd(cls, search=""):
+    def parse_page(cls, url_params=None):
         try:
-            logging.debug("toloka parser request top_hd search:%s" % search)
-            content = cls.sync_request("/tracker.php?f=96&nm={}&tm=7".format(search))
+            logging.debug("toloka parser request top_hd search:")
+            content = cls.sync_request("/tracker.php?{}".format(urlencode(url_params)))
 
             new_data = []
             tree = html.fromstring(content).xpath("//table[contains(@class,'forumline')]//tr[@class]")
 
-            logging.debug("toloka parser begin parsing search:%s" % search)
+            logging.debug("toloka parser begin parsing search:")
             for tr in tree:
                 try:
                     a = tr.xpath("./td[contains(@class,'topictitle')]//a[contains(@class,'genmed')]")[0]
@@ -75,7 +76,7 @@ class TolokaWebParser(WebParser):
                 except Exception:
                     logging.exception("TolokaWebParser udpate")
 
-            logging.debug("toloka parser return search:%s" % search)
+            logging.debug("toloka parser return search:")
             return new_data
         except Exception:
             logging.exception("get_hot")
