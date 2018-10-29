@@ -18,8 +18,7 @@ class RustorkaWebParser(WebParser):
             content = cls.sync_request(url)
             return cls.link_from_xnode(
                 html.fromstring(content).xpath("(//table[@id='topic_main']//td[contains(@class,'message')])[1]"
-                                               "//div[@class='post_wrap']//img")[0],
-                is_https=True)
+                                               "//div[@class='post_wrap']//img")[0])
         except IndexError:
             return None
 
