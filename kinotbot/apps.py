@@ -25,8 +25,8 @@ class KinotbotConfig(AppConfig):
         while True:
             try:
                 self.tbot.handle_update()
-            except Exception:
-                logging.exception("Scheduler")
+            except Exception as e:
+                logging.exception("Scheduler: {}".format(e))
                 break
             time.sleep(self.s_sleep)
 
@@ -46,4 +46,4 @@ class KinotbotConfig(AppConfig):
         except InvalidToken:
             logging.info("KINO_TBOT_TOKEN invalid")
         except Exception as e:
-            logging.exception("Kino tbot initialize")
+            logging.exception("Kino tbot initialize: {}".format(e))

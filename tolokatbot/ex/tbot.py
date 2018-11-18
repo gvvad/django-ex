@@ -84,11 +84,11 @@ class TolokaTBot(TBot):
                                                                uid=user.user_id))
                         TbotChatModel.set_up_date(user.user_id)
                     except Exception as e:
-                        logging.exception("Scheduler toloka set up date", e)
+                        logging.exception("Scheduler toloka set up date: {}".format(e))
 
                 TbotStoreModel.remove_last()
         except Exception as e:
-            logging.exception("Toloka handle update", e)
+            logging.exception("Toloka handle update: {}".format(e))
 
     def send_post(self, uid, post):
         """Send post data to user"""
@@ -138,14 +138,14 @@ class TolokaTBot(TBot):
             res.text += "\nПоследние новости:\n" + self.render_data(TbotStoreModel.get_last())
             return res
         except Exception as e:
-            logging.exception("Error cmd start", e)
+            logging.exception("Error cmd start: {}".format(e))
 
     @staticmethod
     def _dispatch_cmd_stop(chat_id):
         try:
             TbotChatModel.remove_user(chat_id)
         except Exception as e:
-            logging.exception("Error cmd stop", e)
+            logging.exception("Error cmd stop: {}".format(e))
 
     def _dispatch_cmd_unknown(self):
         return super().MessageResponse(text="I don`t understand you")

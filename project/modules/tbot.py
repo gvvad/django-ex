@@ -7,7 +7,7 @@ import time
 from telegram import *
 from telegram.error import *
 from .webparser import WebParser
-from threading import Thread, Event
+from threading import Thread
 
 
 class TBot:
@@ -58,6 +58,7 @@ class TBot:
         :param resp: Response object
         :param uid: Default uid
         :param cid: Default cid
+        :param attempt: Attempts count
         """
         while attempt > 0:
             try:
@@ -165,7 +166,7 @@ class TBot:
                     self.send(item, uid=uid, cid=cid)
 
             except Exception as e:
-                logging.exception("TBot POST response", e)
+                logging.exception("TBot POST response: {}".format(e))
 
     def handle_request(self, request, is_async=True):
         """

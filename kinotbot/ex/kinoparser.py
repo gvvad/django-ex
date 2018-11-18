@@ -55,10 +55,10 @@ class KinoWebParser(WebParser):
                                                             poster=poster,
                                                             link=link,
                                                             tag=cls.TAG_HD))
-                except Exception:
-                    logging.exception("TBStorage udpate")
+                except Exception as e:
+                    logging.exception("TBStorage udpate: {}".format(e))
 
             return new_data
-        except Exception:
-            logging.exception("get_hot")
+        except Exception as e:
+            logging.exception("get_hot: {}".format(e))
             return []

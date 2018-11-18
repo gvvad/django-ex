@@ -40,8 +40,8 @@ class Scheduler:
         while True:
             try:
                 self.handler()
-            except Exception:
-                logging.exception("Scheduler")
+            except Exception as e:
+                logging.exception("Scheduler: {}".format(e))
             if self.event.wait(timeout=self.sleep_time):
                 break
 

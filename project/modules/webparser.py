@@ -58,5 +58,5 @@ class WebParser:
     @staticmethod
     def text_from_xnode(node):
         s = html.tostring(node, pretty_print=True).decode("utf-8")
-        str = _html.unescape(s).strip()
-        return re.sub("<.*?>", "", str)
+        sb = _html.unescape(s).strip()
+        return re.sub("<.*?>", "", sb)

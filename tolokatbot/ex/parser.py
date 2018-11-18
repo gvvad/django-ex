@@ -28,8 +28,8 @@ class TolokaWebParser(WebParser):
         try:
             content = cls.sync_request(url)
             return cls.link_from_xnode(html.fromstring(content).xpath("//table[@class='forumline']//*[@class='postbody']//img")[0])
-        except Exception:
-            logging.exception("parse_poster")
+        except Exception as e:
+            logging.exception("parse_poster: {}".format(e))
 
         return None
 
@@ -73,11 +73,11 @@ class TolokaWebParser(WebParser):
                                                   year=year,
                                                   link=link,
                                                   tag=cls.TAG_HD))
-                except Exception:
-                    logging.exception("TolokaWebParser udpate")
+                except Exception as e:
+                    logging.exception("TolokaWebParser udpate: {}".format(e))
 
             logging.debug("toloka parser return search:")
             return new_data
-        except Exception:
-            logging.exception("get_hot")
+        except Exception as e:
+            logging.exception("get_hot: {}".format(e))
             return []

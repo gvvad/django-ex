@@ -24,8 +24,8 @@ class TolokatbotConfig(AppConfig):
         while True:
             try:
                 self.tbot.handle_update()
-            except Exception:
-                logging.exception("Scheduler")
+            except Exception as e:
+                logging.exception("Scheduler: {}".format(e))
                 break
             time.sleep(self.s_sleep)
 
@@ -47,4 +47,4 @@ class TolokatbotConfig(AppConfig):
         except InvalidToken:
             logging.info("TOLOKA_TBOT_TOKEN invalid")
         except Exception as e:
-            logging.exception("Toloka tbot initialize")
+            logging.exception("Toloka tbot initialize: {}".format(e))

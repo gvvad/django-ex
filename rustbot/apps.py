@@ -25,8 +25,8 @@ class RustbotConfig(AppConfig):
         while True:
             try:
                 self.tbot.handle_update()
-            except Exception:
-                logging.exception("Scheduler")
+            except Exception as e:
+                logging.exception("Scheduler: {}".format(e))
                 break
             time.sleep(self.s_sleep)
 
@@ -47,4 +47,4 @@ class RustbotConfig(AppConfig):
         except InvalidToken:
             logging.info("RUS_TBOT_TOKEN invalid")
         except Exception as e:
-            logging.exception("Rus tbot initialize")
+            logging.exception("Rus tbot initialize: {}".format(e))

@@ -65,12 +65,12 @@ class KinoTBot(TBot):
                                                                uid=user.user_id))
 
                     except Exception as e:
-                        logging.exception("schedule notif", e)
+                        logging.exception("schedule notif: {}".format(e))
                     TbotChatModel.set_up_date(user.user_id)
 
                 TbotStoreModel.remove_last()
         except Exception as e:
-            logging.exception("Scheduler error:", e)
+            logging.exception("Scheduler error: {}".format(e))
 
     #   Dispatch bot commands
     def _dispatch_cmd_help(self, chat_id):
@@ -101,14 +101,14 @@ class KinoTBot(TBot):
             res = self._dispatch_cmd_help(chat_id)
             res.text += "\nПоследние новости:\n" + self.render_data(TbotStoreModel.get_last())
             return res
-        except Exception:
-            logging.exception("Error cmd start")
+        except Exception as e:
+            logging.exception("Error cmd start: {}".format(e))
 
     def _dispatch_cmd_stop(self, chat_id):
         try:
             TbotChatModel.remove_user(chat_id)
-        except Exception:
-            logging.exception("Error cmd stop")
+        except Exception as e:
+            logging.exception("Error cmd stop: {}".format(e))
 
     def _dispatch_cmd_unknown(self):
         return super().MessageResponse(text="I dont understand you")

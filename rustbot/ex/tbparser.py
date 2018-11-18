@@ -47,12 +47,12 @@ class RustorkaWebParser(WebParser):
                     new_data.append({"title": _title,
                                      "link": _link,
                                      "author": _author})
-                except Exception:
-                    logging.exception("TBStorage udpate")
+                except Exception as e:
+                    logging.exception("TBStorage udpate: {}".format(e))
 
             return new_data
-        except Exception:
-            logging.exception("get_hot")
+        except Exception as e:
+            logging.exception("get_hot: {}".format(e))
             return []
 
     @classmethod
@@ -73,10 +73,10 @@ class RustorkaWebParser(WebParser):
                     new_data.append({"title": _title,
                                      "link": _link,
                                      "author": _author})
-                except Exception:
-                    logging.exception("TBStorage udpate")
+                except Exception as e:
+                    logging.exception("TBStorage udpate: {}".format(e))
 
             return new_data
-        except Exception:
-            logging.exception("get_hot_news")
+        except Exception as e:
+            logging.exception("get_hot_news: {}".format(e))
             return []

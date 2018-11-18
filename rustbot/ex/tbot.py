@@ -61,11 +61,11 @@ class RusTBot(TBot):
                                 self.send(self.MessageResponse(text=self.get_post_text(post),
                                                                uid=item.user_id))
                     except Exception as e:
-                        logging.exception("user delivered", e)
+                        logging.exception("user delivered: {}".format(e))
 
                 RusTbotStore.remove_last(1000)
         except Exception as e:
-            logging.exception("Scheduler error:", e)
+            logging.exception("Scheduler error: {}".format(e))
 
     #   Dispatch bot commands
     def _dispatch_cmd_help(self, chat_id):
@@ -94,14 +94,14 @@ class RusTBot(TBot):
             res.text += "\nПоследние новости:\n" + self.render_data(RusTbotStore.get_last())
             return res
         except Exception as e:
-            logging.exception("Error cmd start", e)
+            logging.exception("Error cmd start: {}".format(e))
 
     def _dispatch_cmd_stop(self, chat_id):
         try:
             RusTbotChat.remove_user(chat_id)
             return self.MessageResponse(text="Bye.", uid=chat_id)
         except Exception as e:
-            logging.exception("Error cmd stop", e)
+            logging.exception("Error cmd stop: {}".format(e))
 
     @classmethod
     def get_post_text(cls, post: RusTbotStore.Container) -> str:
