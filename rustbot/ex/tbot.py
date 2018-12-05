@@ -2,7 +2,7 @@ import logging
 
 from ..models import RusTbotChat
 from ..models import RusTbotStore
-from project.modules.tbot import TBot, InlineKeyboardMarkup, InlineKeyboardButton, BadRequest
+from project.modules.tbot import TBot, InlineKeyboardMarkup, InlineKeyboardButton, BadRequest, Unauthorized
 
 
 class RusTBot(TBot):
@@ -60,8 +60,10 @@ class RusTBot(TBot):
                             except BadRequest:
                                 self.send(self.MessageResponse(text=self.get_post_text(post),
                                                                uid=item.user_id))
+                    except Unauthorized:
+                        RusTbotChat.remove_user(item.user_id)
                     except Exception as e:
-                        logging.exception("user delivered: {}".format(e))
+                        logging.exception("user #{} delivered: {}".format(item.user_id, e))
 
                 RusTbotStore.remove_last(1000)
         except Exception as e:

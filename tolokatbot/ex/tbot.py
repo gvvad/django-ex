@@ -4,7 +4,7 @@ from urllib.parse import urlencode
 
 from ..models import TbotChatModel
 from ..models import TbotStoreModel
-from project.modules.tbot import TBot, InlineKeyboardMarkup, InlineKeyboardButton, BadRequest
+from project.modules.tbot import TBot, InlineKeyboardMarkup, InlineKeyboardButton, BadRequest, Unauthorized
 from .parser import TolokaWebParser
 
 
@@ -83,6 +83,8 @@ class TolokaTBot(TBot):
                                 self.send(self.MessageResponse(text=self.get_html_post(post),
                                                                uid=user.user_id))
                         TbotChatModel.set_up_date(user.user_id)
+                    except Unauthorized:
+                        TbotChatModel.remove_user(user.user_id)
                     except Exception as e:
                         logging.exception("Scheduler toloka set up date: {}".format(e))
 

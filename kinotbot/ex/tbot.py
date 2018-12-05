@@ -3,7 +3,7 @@ import logging
 
 from ..models import TbotChatModel
 from ..models import TbotStoreModel
-from project.modules.tbot import TBot, InlineKeyboardMarkup, InlineKeyboardButton, BadRequest
+from project.modules.tbot import TBot, InlineKeyboardMarkup, InlineKeyboardButton, BadRequest, Unauthorized
 
 
 class KinoTBot(TBot):
@@ -64,6 +64,8 @@ class KinoTBot(TBot):
                                 self.send(self.MessageResponse(text=self.get_post_text(post),
                                                                uid=user.user_id))
 
+                    except Unauthorized:
+                        TbotChatModel.remove_user(user.user_id)
                     except Exception as e:
                         logging.exception("schedule notif: {}".format(e))
                     TbotChatModel.set_up_date(user.user_id)
