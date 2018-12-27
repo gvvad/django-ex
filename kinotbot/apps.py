@@ -15,8 +15,9 @@ class KinotbotConfig(AppConfig):
 
     def __init__(self, *args, **kargs):
         super().__init__(*args, **kargs)
-        self.secret_path = os.getenv("KINO_TBOT_PATH") or "".join(random.choices(string.ascii_lowercase + string.digits,
-                                                                                 k=32))
+        self.secret_path = \
+            os.getenv("TOLOKA_TBOT_PATH") or \
+            "".join([random.choice(string.digits + string.ascii_lowercase) for i in range(32)])
         self.secret_path += "/"
         #   server url for telegram webhook
         self.host_url = os.getenv("HOST_URL") or "https://0.0.0.0:8443/"

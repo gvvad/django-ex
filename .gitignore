@@ -1,5 +1,9 @@
 osdb
 set_vars.bat
+*.env
+*.sqlite
+*.sqlite3
+*.pem
 # Editors
 .idea/
 .vscode/

@@ -16,6 +16,7 @@ from tolokatbot.views import add_path as toloka_add_path
 def index(val):
     return HttpResponse("Index page for app!")
 
+
 urlpatterns = [
     path("", index),
     url(r'^admin/', admin.site.urls),

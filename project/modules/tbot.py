@@ -168,7 +168,7 @@ class TBot:
             except Exception as e:
                 logging.exception("TBot POST response: {}".format(e))
 
-    def handle_request(self, request, is_async=True):
+    def handle_request(self, request, is_async=False):
         """
         Handle http request
         :param request: http request
