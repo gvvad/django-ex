@@ -16,7 +16,7 @@ class RustbotConfig(AppConfig):
     def __init__(self, *args, **kargs):
         super().__init__(*args, **kargs)
         self.secret_path = \
-            os.getenv("TOLOKA_TBOT_PATH") or \
+            os.getenv("RUS_TBOT_PATH") or \
             "".join([random.choice(string.digits + string.ascii_lowercase) for i in range(32)])
         self.secret_path += "/"
 

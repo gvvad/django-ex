@@ -1,4 +1,4 @@
-from django.conf import settings
+# from django.conf import settings
 #from django.shortcuts import render
 from django.http import HttpResponse
 from django.urls import path
@@ -16,9 +16,11 @@ def index(request):
     :param request: Request object
     :return: Http response object
     """
-    logging.debug(str(request.body))
-    app.tbot.handle_request(request)
-    logging.debug("Toloka HttpResponse")
+    try:
+        logging.debug(str(request.body))
+        app.tbot.handle_request(request)
+    except Exception as e:
+        logging.debug("Tolokatbot request: {}".format(e))
     return HttpResponse("")
 
 

@@ -12,8 +12,11 @@ def index(request):
     """
     app request handler
     """
-    logging.debug(str(request.body))
-    app.tbot.handle_request(request)
+    try:
+        logging.debug(str(request.body))
+        app.tbot.handle_request(request)
+    except Exception as e:
+        logging.debug("Rustbot request: {}".format(e))
     return HttpResponse("")
 
 
