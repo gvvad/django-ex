@@ -11,7 +11,6 @@ from tolokatbot.views import add_path as toloka_add_path
 
 # logging.debug("urls.py START")
 
-
 #   index app page
 def index(val):
     return HttpResponse("Index page for app!")
