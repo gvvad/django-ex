@@ -12,11 +12,11 @@ class Command(BaseCommand):
         parser.add_argument("--password")
 
     def handle(self, *args, **options):
+        username = options["username"] or "admin"
+        email = options["email"] or "admin@project.com"
+        password = options["password"] or username
         try:
-            username = options["username"] or "admin"
-            email = options["email"] or "admin@project.com"
-            password = options["password"] or username
-            # User.objects.create_superuser(username, email, password)
+            User.objects.create_superuser(username, email, password)
             print("Created: {} : {} : {}".format(username, email, password))
-        except Exception as e:
+        except Exception:
             print("User {} already exist!".format(username))
