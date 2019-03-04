@@ -38,14 +38,6 @@ class RusTbotStore(models.Model):
     tag = models.IntegerField(default=-1)
     poster = models.TextField(max_length=256, default="")
 
-    class Container:
-        def __init__(self, title="", link="", author="", tag=-1, poster=""):
-            self.title = title
-            self.link = link
-            self.author = author
-            self.tag = tag
-            self.poster = poster
-
     @classmethod
     def is_entry_exist(cls, _link) -> bool:
         r = cls.objects.filter(link=_link)
@@ -74,15 +66,12 @@ class RusTbotStore(models.Model):
     def _store_entries(cls, items, tag=-1):
         delta = []
         for item in items:
-            if not cls.is_entry_exist(item["link"]):
-                item["poster"] = RustorkaWebParser.parse_poster(item["link"]) or ""
+            if not cls.is_entry_exist(item.link):
+                item.poster = RustorkaWebParser.parse_poster(item.link) or ""
+                item.tag = tag
 
-                if cls.store_entry(item["title"], item["link"], item["author"], _tag=tag, poster=item["poster"]):
-                    delta.append(RusTbotStore.Container(title=item["title"],
-                                                        link=item["link"],
-                                                        author=item["author"],
-                                                        tag=tag,
-                                                        poster=item["poster"]))
+                if cls.store_entry(item.title, item.link, item.author, tag, item.poster):
+                    delta.append(item)
         return delta
 
     @staticmethod
@@ -91,7 +80,7 @@ class RusTbotStore(models.Model):
             yield item
 
     @staticmethod
-    def remove_last(count=200):
+    def remove_last(count=500):
         tmp = RusTbotStore.objects.order_by("-up_time").values_list("id", flat=True)[:count]
         RusTbotStore.objects.exclude(pk__in=list(tmp)).delete()
 

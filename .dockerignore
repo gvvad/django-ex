@@ -16,7 +16,6 @@ README.md
 *.bat
 *.sqlite
 *.sqlite3
-*.pem
 *.env
 **/*.pyc
 **/__pycache__

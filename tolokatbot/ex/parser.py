@@ -3,6 +3,7 @@ import re
 from lxml import html
 from project.modules.webparser import WebParser
 from urllib.parse import urlencode
+from project.modules.map import Map
 
 
 class TolokaWebParser(WebParser):
@@ -10,24 +11,12 @@ class TolokaWebParser(WebParser):
 
     TAG_HD = 0x1
 
-    class Container:
-        def __init__(self,
-                     title_a="",
-                     title_b="",
-                     year=0,
-                     link="",
-                     tag=0x0):
-            self.title_a = title_a
-            self.title_b = title_b
-            self.link = link
-            self.year = year
-            self.tag = tag
-
     @classmethod
     def parse_poster(cls, url):
         try:
             content = cls.sync_request(url)
-            return cls.link_from_xnode(html.fromstring(content).xpath("//table[@class='forumline']//*[@class='postbody']//img")[0])
+            return cls.link_from_xnode(
+                html.fromstring(content).xpath("//table[@class='forumline']//*[@class='postbody']//img")[0])
         except Exception as e:
             logging.exception("parse_poster: {}".format(e))
 
@@ -68,13 +57,13 @@ class TolokaWebParser(WebParser):
                     except Exception:
                         raise Exception
 
-                    new_data.append(cls.Container(title_a=title_a,
-                                                  title_b=title_b,
-                                                  year=year,
-                                                  link=link,
-                                                  tag=cls.TAG_HD))
+                    new_data.append(Map(title_a=title_a,
+                                        title_b=title_b,
+                                        year=year,
+                                        link=link,
+                                        tag=cls.TAG_HD))
                 except Exception as e:
-                    logging.exception("TolokaWebParser udpate: {}".format(e))
+                    logging.exception("TolokaWebParser update: {}".format(e))
 
             logging.debug("toloka parser return search:")
             return new_data

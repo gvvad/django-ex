@@ -65,7 +65,7 @@ class TolokaTBot(TBot):
         Check update and dispatch
         """
         try:
-            logging.debug("Sheduler toloka BEGIN update")
+            logging.debug("Scheduler toloka BEGIN update")
             delta = TbotStoreModel.update_posts()
 
             if delta:
@@ -110,26 +110,26 @@ class TolokaTBot(TBot):
         :return: MessageResponse
         """
         is_subscribed = TbotChatModel.is_user(chat_id)
-        res = self.MessageResponse(text=("Вы подписаны!\n"
+        res = self.MessageResponse(text=("You are subscribed!\n"
                                          if is_subscribed else
-                                         "Вы не подписаны.\n"),
+                                         "You are not subscribed.\n"),
                                    reply_markup=InlineKeyboardMarkup(
-                                       [[InlineKeyboardButton(text="Отписаться", callback_data="stop")]]
+                                       [[InlineKeyboardButton(text="Unsubscribe", callback_data="stop")]]
                                        if is_subscribed else
-                                       [[InlineKeyboardButton(text="Подписаться", callback_data="start")]]
+                                       [[InlineKeyboardButton(text="Subscribe", callback_data="start")]]
                                                                  ),
                                    no_notif=True
                                    )
-        res.text += "/start - Подписаться на рассылку\n" \
-                    "/stop - Отписаться\n" \
-                    "/re {message} - Написать отзыв\n" \
-                    "/help - Справка"
+        res.text += "/start - Subscribe\n" \
+                    "/stop - Unsubscribe\n" \
+                    "/re {message} - Feedback\n" \
+                    "/help - Help"
         return res
 
     def _dispatch_cmd_re(self, user_id, text, username=""):
         if text:
             self.send(self.MessageResponse(text="From: {}\n{}".format(username, text), uid=self.master_user))
-            return self.MessageResponse(text="Спасибо за Ваш отзыв.")
+            return self.MessageResponse(text="Your feedback is sended.")
         else:
             return None
 
@@ -137,7 +137,7 @@ class TolokaTBot(TBot):
         try:
             TbotChatModel.update_user(chat_id)
             res = self._dispatch_cmd_help(chat_id)
-            res.text += "\nПоследние новости:\n" + self.render_data(TbotStoreModel.get_last())
+            res.text += "\nCurrent feed:\n" + self.render_data(TbotStoreModel.get_last())
             return res
         except Exception as e:
             logging.exception("Error cmd start: {}".format(e))
@@ -155,15 +155,18 @@ class TolokaTBot(TBot):
     @staticmethod
     def get_html_post(post):
         """Return html text for post item"""
-        return "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b> <a href='{5}/tracker.php?{6}'>Найти</a>".\
+        search_url = "{}/tracker.php?{}".format(
+            TolokaWebParser.HOST,
+            urlencode({"nm": str(post.title_b or post.title_a) + " " + str(post.year)})
+        )
+        return "<a href='{0}'>{1} / {2} / {3}</a> <b>{4}</b>".\
             format(
-                post.link,
+                search_url,  # post.link,
                 post.title_a,
                 post.title_b,
                 post.year,
                 "HD" if bool(post.tag & 1) else "SD",
-                TolokaWebParser.HOST,
-                urlencode({"nm": str(post.title_b or post.title_a) + " " + str(post.year)}))
+            )
 
     @classmethod
     def render_data(cls, data):

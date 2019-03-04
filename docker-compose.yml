@@ -1,0 +1,54 @@
+version: "3.3"
+
+volumes:
+  pgdata:
+
+services:
+  tbot:
+    build: .
+    image: gvvad/tbot:latest
+    depends_on:
+      - postgresql
+    ports:
+#      - 80:8443/tcp
+      - 443:8443/tcp
+    volumes:
+      - type: bind
+        source: ./
+        target: /env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HOST_URL=https://194.12.64.184/
+      - CERT_FILE_PATH=/env/key_cert.pem
+      - KEYFILE=/env/key.pem
+      - CERTFILE=/env/cert.pem
+      - DATABASE_SERVICE_NAME=POSTGRESQL
+      - DATABASE_NAME=postgres
+      - DATABASE_USER=dbuser
+      - DATABASE_PASSWORD=testpass
+      - POSTGRESQL_SERVICE_HOST=postgresql
+      - POSTGRESQL_SERVICE_PORT=5432
+#
+      - RUS_TBOT_TOKEN=
+      - RUS_TBOT_INTERVAL=60
+      - RUS_TBOT_PATH=zf4lyf8fv1rqbwo3gwu9y6axghki6cr9
+#
+      - KINO_TBOT_TOKEN=
+      - KINO_TBOT_PATH=iv9y9yho7danjpqljbcqsb35qq6gbgi9
+      - KINO_TBOT_MASTER=
+#
+      - TOLOKA_TBOT_TOKEN=
+      - TOLOKA_TBOT_PATH=qcxaebj3qg5x1mzihazw7noot0jp97ci
+      - TOLOKA_TBOT_MASTER=
+
+  postgresql:
+    image: postgres:alpine
+    ports:
+      - 5432:5432/tcp
+    volumes:
+      - type: volume
+        source: pgdata
+        target: /var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=testpass
+      - POSTGRES_USER=dbuser

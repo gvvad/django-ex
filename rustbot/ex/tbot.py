@@ -106,7 +106,7 @@ class RusTBot(TBot):
             logging.exception("Error cmd stop: {}".format(e))
 
     @classmethod
-    def get_post_text(cls, post: RusTbotStore.Container) -> str:
+    def get_post_text(cls, post) -> str:
         return "<a href='{0}'>{1}</a> by: <i>{2}</i>".format(
                 post.link,
                 post.title,

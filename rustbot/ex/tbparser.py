@@ -2,6 +2,7 @@ import logging
 from lxml import html
 from project.modules.webparser import WebParser
 import datetime
+from project.modules.map import Map
 
 
 class RustorkaWebParser(WebParser):
@@ -44,9 +45,9 @@ class RustorkaWebParser(WebParser):
                     except ValueError:
                         pass
 
-                    new_data.append({"title": _title,
-                                     "link": _link,
-                                     "author": _author})
+                    new_data.append(Map(title=_title,
+                                        link=_link,
+                                        author=_author))
                 except Exception as e:
                     logging.exception("TBStorage udpate: {}".format(e))
 
@@ -70,9 +71,9 @@ class RustorkaWebParser(WebParser):
                     _link = cls.link_from_xnode(a)
                     _author = cls.text_from_xnode(tr.xpath(".//a[contains(@class,'topicAuthor')]")[0])
 
-                    new_data.append({"title": _title,
-                                     "link": _link,
-                                     "author": _author})
+                    new_data.append(Map(title=_title,
+                                        link=_link,
+                                        author=_author))
                 except Exception as e:
                     logging.exception("TBStorage udpate: {}".format(e))
 

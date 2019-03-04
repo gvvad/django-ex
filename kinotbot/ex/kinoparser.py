@@ -1,27 +1,13 @@
 import logging
 from lxml import html
 from project.modules.webparser import WebParser
+from project.modules.map import Map
 
 
 class KinoWebParser(WebParser):
     HOST = "http://kinozal.tv"
 
     TAG_HD = 0x1
-
-    class Container:
-        def __init__(self,
-                     title_ru="",
-                     title_en="",
-                     year=0,
-                     poster="",
-                     link="",
-                     tag=0x0):
-            self.title_en=title_en
-            self.title_ru=title_ru
-            self.link=link
-            self.year=year
-            self.poster=poster
-            self.tag=tag
 
     @classmethod
     def parse_top(cls):
@@ -40,21 +26,18 @@ class KinoWebParser(WebParser):
                     items = [s.strip() for s in text.split("/")]
                     try:
                         year = int(items[2][:4])
-                        title_ru = items[0]
                         title_en = items[1]
-                    except Exception:
-                        try:
-                            year = int(items[1][:4])
-                            title_ru = items[0]
-                        except Exception:
-                            raise Exception
+                        title_ru = items[0]
+                    except IndexError:
+                        year = int(items[1][:4])
+                        title_ru = items[0]
 
-                    new_data.append(cls.Container(title_ru=title_ru,
-                                                            title_en=title_en,
-                                                            year=year,
-                                                            poster=poster,
-                                                            link=link,
-                                                            tag=cls.TAG_HD))
+                    new_data.append(Map(title_ru=title_ru,
+                                        title_en=title_en,
+                                        year=year,
+                                        poster=poster,
+                                        link=link,
+                                        tag=cls.TAG_HD))
                 except Exception as e:
                     logging.exception("TBStorage udpate: {}".format(e))
 

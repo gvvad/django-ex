@@ -31,20 +31,14 @@ class RustbotConfig(AppConfig):
                 break
             time.sleep(self.s_sleep)
 
+    def set_webhook(self):
+        if self.tbot:
+            self.tbot.set_webhook_url(self.host_url + self.secret_path, str(os.getenv("CERT_FILE_PATH")), attempt=3)
+
     def ready(self):
         from .ex.tbot import RusTBot
         try:
             self.tbot = RusTBot(token=os.getenv("RUS_TBOT_TOKEN") or None)
-
-            self.tbot.set_webhook_url(self.host_url + self.secret_path, str(os.getenv("CERT_FILE_PATH")), attempt=3)
-            logging.info("rustbot sets webhook")
-
-            # self.tbot.handle_update()
-
-            # self.scheduler = Scheduler(handler=self.tbot.handle_update,
-            #                            sleep_time=60 * int(os.getenv("") or 30),
-            #                            start=True,
-            #                            is_daemon=True)
         except InvalidToken:
             logging.info("RUS_TBOT_TOKEN invalid")
         except Exception as e:

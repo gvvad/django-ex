@@ -37,8 +37,8 @@ class TbotChatModel(UserModel):
     @classmethod
     def get_notification_list(cls):
         query = cls.objects.raw("SELECT * "
-                              "FROM tolokatbot_tbotchatmodel LEFT JOIN tolokatbot_tbotstoremodel "
-                              "ON add_time > up_date")
+                                "FROM tolokatbot_tbotchatmodel LEFT JOIN tolokatbot_tbotstoremodel "
+                                "ON add_time > up_date")
         res = dict()
         for item in query:
             res.setdefault(item.user_id, []).append(item)
@@ -56,15 +56,6 @@ class TbotStoreModel(models.Model):
 
     class EntryExistException(Exception):
         pass
-
-    class Container:
-        def __init__(self, title_a="", title_b="", year=0, poster="", link="", tag=-1):
-            self.title_a = title_a
-            self.title_b = title_b
-            self.year = year
-            self.poster = poster
-            self.link = link
-            self.tag = tag
 
     @classmethod
     @transaction.atomic

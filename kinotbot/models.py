@@ -43,15 +43,6 @@ class TbotStoreModel(models.Model):
     class EntryExistException(Exception):
         pass
 
-    class Container:
-        def __init__(self, title_ru="", title_en="", year=0, poster="", link="", tag=-1):
-            self.title_en = title_en
-            self.title_ru = title_ru
-            self.year = year
-            self.poster = poster
-            self.link = link
-            self.tag = tag
-
     @classmethod
     @transaction.atomic
     def update_entry(cls, title_ru="", title_en="", year=0, poster="", link="", tag=-1):
@@ -92,12 +83,7 @@ class TbotStoreModel(models.Model):
                                  poster=item.poster,
                                  link=item.link,
                                  tag=tag)
-                delta.append(cls.Container(title_ru=item.title_ru,
-                                           title_en=item.title_en,
-                                           year=item.year,
-                                           poster=item.poster,
-                                           link=item.link,
-                                           tag=tag))
+                delta.append(item)
             except cls.EntryExistException:
                 pass
 

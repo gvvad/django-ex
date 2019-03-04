@@ -31,19 +31,17 @@ class KinotbotConfig(AppConfig):
                 break
             time.sleep(self.s_sleep)
 
+    def set_webhook(self):
+        if self.tbot:
+            self.tbot.set_webhook_url(self.host_url + self.secret_path, str(os.getenv("CERT_FILE_PATH")), attempt=3)
+
     def ready(self):
         from .ex.tbot import KinoTBot
         try:
             self.tbot = KinoTBot(token=os.getenv("KINO_TBOT_TOKEN") or None,
                                  master_user=os.getenv("KINO_TBOT_MASTER") or None)
 
-            self.tbot.set_webhook_url(self.host_url + self.secret_path, str(os.getenv("CERT_FILE_PATH")), attempt=3)
-            logging.info("kinotbot sets webhook")
             self.s_sleep = 60 * int(os.getenv("KINO_TBOT_INTERVAL") or 30)
-            # self.scheduler = Scheduler(handler=self.tbot.handle_update,
-            #                            sleep_time=60 * int(os.getenv("KINO_TBOT_INTERVAL") or 30),
-            #                            start=True,
-            #                            is_daemon=True)
         except InvalidToken:
             logging.info("KINO_TBOT_TOKEN invalid")
         except Exception as e:
